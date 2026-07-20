@@ -104,7 +104,11 @@ async def update_playbook(
 
     if body.yaml_content:
         try:
-            PlaybookParser.from_yaml(body.yaml_content)
+            parsed_pb = PlaybookParser.from_yaml(body.yaml_content)
+            # Обновляем поля из распарсенного YAML
+            pb.description = parsed_pb.description
+            pb.mitre_tactics = parsed_pb.mitre_tactics
+            pb.mitre_techniques = parsed_pb.mitre_techniques
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
