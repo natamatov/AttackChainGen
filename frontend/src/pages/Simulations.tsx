@@ -66,6 +66,30 @@ export default function Simulations() {
     }
   }
 
+  const handleCancel = async (id: number) => {
+    try {
+      await api.post(`/simulations/${id}/cancel`)
+      fetchData()
+    } catch (e) {
+      console.error(e)
+      alert("Failed to cancel simulation")
+    }
+  }
+
+  const handleRestart = async (playbook_id: number, stand_id: number) => {
+    try {
+      const res = await api.post('/simulations/run', {
+        playbook_id,
+        stand_id
+      })
+      setActiveRunId(res.data.id)
+      fetchData()
+    } catch (e) {
+      console.error(e)
+      alert("Failed to restart simulation")
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -127,23 +151,36 @@ export default function Simulations() {
                   <th className="pb-3 font-medium">Stand</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Started At</th>
+                  <th className="pb-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {simulations.map((sim: any) => (
                   <tr key={sim.id} className="border-b last:border-0">
                     <td className="py-3">{sim.id}</td>
-                    <td className="py-3">{sim.playbook_id}</td>
-                    <td className="py-3">{sim.stand_id}</td>
+                    <td className="py-3">{sim.playbook_name || `ID: ${sim.playbook_id}`}</td>
+                    <td className="py-3">{sim.stand_name || `ID: ${sim.stand_id}`}</td>
                     <td className="py-3 flex items-center gap-2">
                       {getStatusIcon(sim.status)} {sim.status}
                     </td>
                     <td className="py-3">{new Date(sim.created_at).toLocaleString()}</td>
+                    <td className="py-3 text-right space-x-2">
+                      {(sim.status === 'PENDING' || sim.status === 'RUNNING') && (
+                        <Button variant="outline" size="sm" onClick={() => handleCancel(sim.id)}>
+                          Stop
+                        </Button>
+                      )}
+                      {sim.playbook_id && sim.stand_id && (
+                        <Button variant="secondary" size="sm" onClick={() => handleRestart(sim.playbook_id, sim.stand_id)}>
+                          Restart
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {simulations.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       No simulations run yet.
                     </td>
                   </tr>
