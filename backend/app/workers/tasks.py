@@ -265,12 +265,15 @@ def run_simulation(self: Task, run_id: int) -> dict:
             for step_id, arts in artifacts.items()
         }
 
+        final_status = SimulationStatus.FAILED if errors else SimulationStatus.COMPLETED
+        final_msg = f"Failed with {len(errors)} errors. First: {errors[0]}" if errors else f"Completed: {events_sent}/{total_steps} events sent"
+
         _update_run_status(
-            db, run, SimulationStatus.COMPLETED,
+            db, run, final_status,
             current=total_steps, total=total_steps,
             artifacts=serialized_artifacts,
             events_sent=events_sent,
-            message=f"Completed: {events_sent}/{total_steps} events sent"
+            message=final_msg
         )
 
         exporter.close()

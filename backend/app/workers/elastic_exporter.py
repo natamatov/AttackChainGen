@@ -114,9 +114,8 @@ class ElasticExporter:
         for doc in documents:
             body.append({"create": {"_index": self._index}})
             body.append(doc)
-
         try:
-            resp = self._client.bulk(body=body, refresh=False)
+            resp = self._client.bulk(operations=body, refresh=False)
         except BadRequestError as exc:
             logger.error("Bulk API bad request: %s", exc)
             raise
