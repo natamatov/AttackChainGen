@@ -54,6 +54,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    links:
+      - postgres
+      - redis
     volumes:
       - ./backend/playbooks:/app/playbooks
       - ./backend/templates:/app/templates
@@ -79,6 +82,9 @@ services:
     depends_on:
       - redis
       - postgres
+    links:
+      - redis
+      - postgres
     volumes:
       - ./backend/playbooks:/app/playbooks
       - ./backend/templates:/app/templates
@@ -98,6 +104,8 @@ services:
       - "5555:5555"
     depends_on:
       - redis
+    links:
+      - redis
 
   # ── Frontend (React + Nginx) ──────────────────────────────────────────
   frontend:
@@ -109,6 +117,8 @@ services:
     ports:
       - "80:80"
     depends_on:
+      - backend
+    links:
       - backend
     networks:
       - attackchain_net
