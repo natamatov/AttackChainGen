@@ -1,0 +1,74 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["file"],
+    "type": ["creation"],
+    "provider": "Microsoft-Windows-Sysmon",
+    "code": "11",
+    "dataset": "sysmon.file_creation",
+    "module": "sysmon"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}"
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "process": {
+    "pid": {{ process_pid }},
+    "name": "{{ process_name }}",
+    "executable": "{{ process_path | default(process_name) }}",
+    "entity_id": "{{ process_guid | default(log_id) }}"
+  },
+  "file": {
+    "path": {{ file_path | tojson }},
+    "name": {{ file_name | default(file_path.split('\\')[-1]) | tojson }},
+    "directory": {{ file_directory | default('') | tojson }},
+    "extension": "{{ file_extension | default('') }}",
+    "hash": {
+      "sha256": "{{ file_hash_sha256 | default('') }}"
+    },
+    "created": "{{ '@timestamp' }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Sysmon",
+    "event_id": 11,
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(10000, 99999) | random) }},
+    "event_data": {
+      "RuleName": "{{ rule_name | default('-') }}",
+      "UtcTime": "{{ '@timestamp' }}",
+      "ProcessGuid": "{{ process_guid | default(log_id) }}",
+      "ProcessId": "{{ process_pid }}",
+      "Image": {{ process_path | default(process_name) | tojson }},
+      "TargetFilename": {{ file_path | tojson }},
+      "CreationUtcTime": "{{ '@timestamp' }}"
+    }
+  },
+  "log": { "level": "information" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

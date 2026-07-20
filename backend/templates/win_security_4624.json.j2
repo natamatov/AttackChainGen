@@ -1,0 +1,87 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["authentication"],
+    "type": ["start", "allowed"],
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "code": "4624",
+    "dataset": "windows.security",
+    "module": "windows",
+    "outcome": "success"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}"
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "source": {
+    "ip": "{{ source_ip | default(host_ip) }}",
+    "port": {{ source_port | default(0) }},
+    "domain": "{{ source_hostname | default(host_name) }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Security-Auditing",
+    "event_id": 4624,
+    "channel": "Security",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(100000, 999999) | random) }},
+    "keywords": ["Audit Success"],
+    "task": "Logon",
+    "opcode": "Info",
+    "event_data": {
+      "SubjectUserSid": "S-1-0-0",
+      "SubjectUserName": "-",
+      "SubjectDomainName": "-",
+      "SubjectLogonId": "0x0",
+      "TargetUserSid": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}",
+      "TargetUserName": "{{ user_name }}",
+      "TargetDomainName": "{{ user_domain }}",
+      "TargetLogonId": "0x{{ range(100000, 999999) | random | string }}",
+      "LogonType": "{{ logon_type | default('3') }}",
+      "LogonProcessName": "{{ logon_process | default('NtLmSsp') }}",
+      "AuthenticationPackageName": "{{ auth_package | default('NTLM') }}",
+      "WorkstationName": "{{ source_hostname | default(host_name) }}",
+      "LogonGuid": "{{ log_id }}",
+      "TransmittedServices": "-",
+      "LmPackageName": "{{ lm_package | default('NTLM V2') }}",
+      "KeyLength": "{{ key_length | default('128') }}",
+      "ProcessId": "0x{{ '%x' % (process_pid | default(0)) }}",
+      "ProcessName": "{{ process_name | default('-') }}",
+      "IpAddress": "{{ source_ip | default(host_ip) }}",
+      "IpPort": "{{ source_port | default(0) }}",
+      "ImpersonationLevel": "{{ impersonation_level | default('%%1833') }}",
+      "RestrictedAdminMode": "-",
+      "RemoteCredentialGuard": "-",
+      "VirtualAccount": "%%1843",
+      "TargetLinkedLogonId": "0x0",
+      "ElevatedToken": "{{ '%%1842' if is_elevated | default(false) else '%%1843' }}"
+    }
+  },
+  "log": { "level": "information" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

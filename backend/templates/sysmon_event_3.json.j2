@@ -1,0 +1,92 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["network"],
+    "type": ["connection", "start"],
+    "provider": "Microsoft-Windows-Sysmon",
+    "code": "3",
+    "dataset": "sysmon.network_connection",
+    "module": "sysmon"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}"
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "process": {
+    "pid": {{ process_pid }},
+    "name": "{{ process_name }}",
+    "executable": "{{ process_path | default(process_name) }}",
+    "entity_id": "{{ process_guid | default(log_id) }}"
+  },
+  "source": {
+    "ip": "{{ source_ip | default(host_ip) }}",
+    "port": {{ source_port | default(0) }},
+    "domain": "{{ host_name }}.{{ host_domain }}"
+  },
+  "destination": {
+    "ip": "{{ destination_ip }}",
+    "port": {{ destination_port }},
+    "domain": "{{ destination_domain | default('') }}"
+  },
+  "network": {
+    "protocol": "{{ network_protocol | default('tcp') }}",
+    "transport": "{{ network_protocol | default('tcp') }}",
+    "direction": "{{ network_direction | default('egress') }}",
+    "type": "ipv4",
+    "community_id": "{{ log_id }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Sysmon",
+    "event_id": 3,
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(10000, 99999) | random) }},
+    "event_data": {
+      "RuleName": "{{ rule_name | default('-') }}",
+      "UtcTime": "{{ '@timestamp' }}",
+      "ProcessGuid": "{{ process_guid | default(log_id) }}",
+      "ProcessId": "{{ process_pid }}",
+      "Image": "{{ process_path | default(process_name) }}",
+      "User": "{{ user_domain }}\\{{ user_name }}",
+      "Protocol": "{{ network_protocol | default('tcp') }}",
+      "Initiated": "true",
+      "SourceIsIpv6": "false",
+      "SourceIp": "{{ source_ip | default(host_ip) }}",
+      "SourceHostname": "{{ host_name }}.{{ host_domain }}",
+      "SourcePort": "{{ source_port | default(0) }}",
+      "SourcePortName": "-",
+      "DestinationIsIpv6": "false",
+      "DestinationIp": "{{ destination_ip }}",
+      "DestinationHostname": "{{ destination_domain | default('') }}",
+      "DestinationPort": "{{ destination_port }}",
+      "DestinationPortName": "{{ 'https' if destination_port == 443 else ('http' if destination_port == 80 else '-') }}"
+    }
+  },
+  "log": { "level": "information" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

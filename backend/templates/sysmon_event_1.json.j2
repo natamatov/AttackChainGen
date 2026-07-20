@@ -1,0 +1,100 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["process"],
+    "type": ["start"],
+    "provider": "Microsoft-Windows-Sysmon",
+    "code": "1",
+    "dataset": "sysmon.process_creation",
+    "module": "sysmon"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "S-1-5-21-{{ range(1000000000, 9999999999) | random }}-{{ range(1000, 9999) | random }}"
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}",
+    "ephemeral_id": "{{ log_id }}"
+  },
+  "process": {
+    "pid": {{ process_pid }},
+    "entity_id": "{{ process_guid | default(log_id) }}",
+    "name": "{{ process_name }}",
+    "executable": {{ process_path | default(process_name) | tojson }},
+    "command_line": {{ process_command_line | default(process_name) | tojson }},
+    "working_directory": {{ process_working_dir | default('C:\\Windows\\system32') | tojson }},
+    "hash": {
+      "sha256": "{{ process_hash_sha256 | default('') }}",
+      "md5": "{{ process_hash_md5 | default('') }}"
+    },
+    "pe": {
+      "original_file_name": "{{ process_name }}"
+    },
+    "parent": {
+      "pid": {{ parent_pid | default(4) }},
+      "name": "{{ parent_name | default('System') }}",
+      "entity_id": "{{ parent_guid | default('') }}",
+      "executable": {{ parent_path | default('C:\\Windows\\System32\\' + (parent_name | default('System'))) | tojson }}
+    }
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Sysmon",
+    "event_id": 1,
+    "channel": "Microsoft-Windows-Sysmon/Operational",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(10000, 99999) | random) }},
+    "opcode": "Info",
+    "task": "Process Create (rule: ProcessCreate)",
+    "event_data": {
+      "RuleName": "{{ rule_name | default('-') }}",
+      "UtcTime": "{{ '@timestamp' }}",
+      "ProcessGuid": "{{ process_guid | default(log_id) }}",
+      "ProcessId": "{{ process_pid }}",
+      "Image": {{ process_path | default(process_name) | tojson }},
+      "FileVersion": "{{ file_version | default('-') }}",
+      "Description": "-",
+      "Product": "-",
+      "Company": "{{ company | default('Microsoft Corporation') }}",
+      "OriginalFileName": "{{ process_name }}",
+      "CommandLine": {{ process_command_line | default(process_name) | tojson }},
+      "CurrentDirectory": {{ (process_working_dir | default('C:\\Windows\\system32\\')) | tojson }},
+      "User": "{{ user_domain }}\\{{ user_name }}",
+      "LogonGuid": "{{ log_id }}",
+      "LogonId": "0x{{ range(100000, 999999) | random | string }}",
+      "TerminalSessionId": "{{ terminal_session | default(1) }}",
+      "IntegrityLevel": "{{ integrity_level | default('Medium') }}",
+      "Hashes": "SHA256={{ process_hash_sha256 | default('') }},MD5={{ process_hash_md5 | default('') }}",
+      "ParentProcessGuid": "{{ parent_guid | default('') }}",
+      "ParentProcessId": "{{ parent_pid | default(4) }}",
+      "ParentImage": {{ parent_path | default('C:\\Windows\\System32\\' + (parent_name | default('System'))) | tojson }},
+      "ParentCommandLine": {{ parent_command_line | default('-') | tojson }}
+    }
+  },
+  "log": {
+    "level": "information"
+  },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}
