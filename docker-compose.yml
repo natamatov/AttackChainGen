@@ -99,10 +99,6 @@ services:
     depends_on:
       - redis
 
-volumes:
-  postgres_data:
-  redis_data:
-
   # ── Frontend (React + Nginx) ──────────────────────────────────────────
   frontend:
     build:
@@ -114,3 +110,7 @@ volumes:
       - "80:80"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
+  redis_data:
