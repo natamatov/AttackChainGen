@@ -164,7 +164,12 @@ def run_simulation(self: Task, run_id: int) -> dict:
             )
             return {"error": str(exc)}
 
-        steps = pb.execution_order()
+        base_steps = pb.execution_order()
+        steps = []
+        for s in base_steps:
+            for _ in range(s.multiplier):
+                steps.append(s)
+                
         total_steps = len(steps)
 
         _update_run_status(

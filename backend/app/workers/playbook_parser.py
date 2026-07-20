@@ -48,6 +48,7 @@ class PlaybookStep(BaseModel):
     depends_on: str | None = None              # ID родительского шага
     fields: dict[str, Any] = Field(default_factory=dict)
     description: str | None = None
+    multiplier: int = Field(default=1, ge=1)
 
     @field_validator("delay_from_start", "delay_from_prev", mode="before")
     @classmethod

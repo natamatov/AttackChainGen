@@ -7,6 +7,7 @@
     "type": ["start", "denied"],
     "provider": "Microsoft-Windows-Security-Auditing",
     "code": "4625",
+    "action": "logon-failed",
     "dataset": "windows.security",
     "module": "windows",
     "outcome": "failure"
@@ -46,6 +47,9 @@
     "channel": "Security",
     "computer_name": "{{ host_name }}.{{ host_domain }}",
     "record_id": {{ event_id | default(range(100000, 999999) | random) }},
+    "logon": {
+      "type": "Network"
+    },
     "keywords": ["Audit Failure"],
     "task": "Logon",
     "opcode": "Info",
