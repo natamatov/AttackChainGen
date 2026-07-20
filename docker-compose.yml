@@ -116,8 +116,6 @@ services:
       - "80:80"
     depends_on:
       - backend
-    links:
-      - backend
     networks:
       - attackchain_net
 
