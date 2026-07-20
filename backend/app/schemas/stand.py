@@ -40,6 +40,7 @@ class StandOut(BaseModel):
     elastic_url: str
     tenant_id: str | None
     index_pattern: str
+    username: str | None
     verify_ssl: bool
     is_active: bool
     created_by: int | None

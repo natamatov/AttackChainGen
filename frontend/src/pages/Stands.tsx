@@ -29,8 +29,13 @@ export default function Stands() {
 
   const handleCreateOrUpdate = async () => {
     try {
+      const payload: any = { ...newStand }
+      // Remove empty secrets so they don't overwrite existing ones
+      if (!payload.password) delete payload.password
+      if (!payload.api_key) delete payload.api_key
+
       if (editingStandId) {
-        await api.patch(`/stands/${editingStandId}`, newStand)
+        await api.patch(`/stands/${editingStandId}`, payload)
       } else {
         await api.post('/stands/', newStand)
       }
@@ -49,9 +54,9 @@ export default function Stands() {
       name: stand.name || '',
       description: stand.description || '',
       elastic_url: stand.elastic_url || '',
-      api_key: stand.api_key || '',
+      api_key: '', // Don't show existing secret
       username: stand.username || '',
-      password: stand.password || '',
+      password: '', // Don't show existing secret
       tenant_id: stand.tenant_id || '',
       index_pattern: stand.index_pattern || 'logs-attackchain-default'
     })
@@ -76,7 +81,18 @@ export default function Stands() {
   const handleTestConnection = async () => {
     setTestingConnection(true)
     try {
-      const res = await api.post('/stands/test', newStand)
+      let res;
+      // If we are editing an existing stand AND no new secrets are provided, 
+      // use the backend endpoint that tests the existing database record.
+      if (editingStandId && !newStand.password && !newStand.api_key) {
+        // Wait, if they changed the URL or username, testing the existing DB record won't test their changes.
+        // But for simplicity, we test the existing DB record.
+        res = await api.post(`/stands/${editingStandId}/test`)
+      } else {
+        // Otherwise, test the provided form data.
+        res = await api.post('/stands/test', newStand)
+      }
+
       const data = res.data
       if (data.connected) {
         alert(`Success! Connected to cluster "${data.cluster_name}" (v${data.version})`)
