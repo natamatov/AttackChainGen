@@ -15,10 +15,35 @@ interface PlaybookSummary {
 export default function Playbooks() {
   const [playbooks, setPlaybooks] = useState<PlaybookSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [showImport, setShowImport] = useState(false)
+  const [newYamlName, setNewYamlName] = useState('')
+  const [yamlContent, setYamlContent] = useState('')
 
   useEffect(() => {
     fetchPlaybooks()
   }, [])
+
+  const handleImportYaml = async () => {
+    if (!newYamlName || !yamlContent) {
+      alert("Name and YAML content are required")
+      return
+    }
+    try {
+      await api.post('/playbooks/', {
+        name: newYamlName,
+        yaml_content: yamlContent,
+        mitre_tactics: [],
+        mitre_techniques: []
+      })
+      setShowImport(false)
+      setNewYamlName('')
+      setYamlContent('')
+      fetchPlaybooks()
+    } catch (e) {
+      console.error(e)
+      alert("Failed to import YAML playbook")
+    }
+  }
 
   const fetchPlaybooks = async () => {
     try {
@@ -37,11 +62,40 @@ export default function Playbooks() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Playbooks</h2>
           <p className="text-muted-foreground">Manage your attack simulation playbooks.</p>
+        <div className="flex space-x-2">
+          <Button onClick={() => setShowImport(!showImport)} variant="outline">
+            Import YAML
+          </Button>
+          <Link to="/playbooks/builder" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Open Builder
+          </Link>
         </div>
-        <Link to="/playbooks/builder" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          Create Playbook
-        </Link>
       </div>
+
+      {showImport && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Import Playbook YAML</CardTitle>
+            <CardDescription>Paste the YAML definition of your playbook here.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input value={newYamlName} onChange={e => setNewYamlName(e.target.value)} placeholder="e.g. My Custom Playbook" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">YAML Content</label>
+              <textarea 
+                className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                value={yamlContent}
+                onChange={e => setYamlContent(e.target.value)}
+                placeholder="name: My Custom Playbook&#10;steps:&#10;  ..."
+              />
+            </div>
+            <Button onClick={handleImportYaml}>Save Playbook</Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
