@@ -27,16 +27,19 @@ class GlobalContext(BaseModel):
     user_name: str | None = Field(None, alias="user.name")
     user_domain: str | None = Field(None, alias="user.domain")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data = {
             "host.name": self.host_name,
             "host.domain": self.host_domain,
             "host.ip": self.host_ip,
             "user.name": self.user_name,
             "user.domain": self.user_domain,
         }
+        if self.model_extra:
+            data.update(self.model_extra)
+        return data
 
 
 class PlaybookStep(BaseModel):
