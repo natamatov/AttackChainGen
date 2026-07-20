@@ -71,30 +71,53 @@ export default function Stands() {
     }
   }
 
+  const [testingConnection, setTestingConnection] = useState(false)
+  
+  const handleTestConnection = async () => {
+    setTestingConnection(true)
+    try {
+      const res = await api.post('/stands/test', newStand)
+      const data = res.data
+      if (data.connected) {
+        alert(`Success! Connected to cluster "${data.cluster_name}" (v${data.version})`)
+      } else {
+        alert(`Failed: ${data.message}`)
+      }
+    } catch (e: any) {
+      console.error(e)
+      alert(`Error testing connection: ${e.response?.data?.detail || e.message}`)
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Target Stands</h1>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Stands</h2>
+          <p className="text-muted-foreground">Manage target Elasticsearch clusters.</p>
+        </div>
         <Button onClick={() => {
+          setShowAdd(!showAdd)
           setEditingStandId(null)
           setNewStand({ name: '', description: '', elastic_url: '', api_key: '', username: '', password: '', tenant_id: '', index_pattern: 'logs-attackchain-default' })
-          setShowAdd(!showAdd)
         }}>
-          {showAdd ? 'Cancel' : <><Plus className="mr-2 h-4 w-4" /> Add Stand</>}
+          <Plus className="mr-2 h-4 w-4" /> Add Stand
         </Button>
       </div>
 
       {showAdd && (
-        <Card>
+        <Card className="bg-muted/50">
           <CardHeader>
             <CardTitle>{editingStandId ? 'Edit Stand' : 'Add New Stand'}</CardTitle>
-            <CardDescription>Configure an ElasticSearch cluster as a target</CardDescription>
+            <CardDescription>Configure connection details for the target Elasticsearch cluster.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Name</label>
-                <Input value={newStand.name} onChange={e => setNewStand({...newStand, name: e.target.value})} placeholder="e.g. Prod SIEM" />
+                <Input value={newStand.name} onChange={e => setNewStand({...newStand, name: e.target.value})} placeholder="e.g. Production Cluster" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
@@ -125,7 +148,12 @@ export default function Stands() {
                 <Input value={newStand.index_pattern} onChange={e => setNewStand({...newStand, index_pattern: e.target.value})} placeholder="logs-attackchain-default" />
               </div>
             </div>
-            <Button onClick={handleCreateOrUpdate} className="mt-4">{editingStandId ? 'Update Stand' : 'Save Stand'}</Button>
+            <div className="mt-4 flex space-x-2">
+              <Button onClick={handleCreateOrUpdate}>{editingStandId ? 'Update Stand' : 'Save Stand'}</Button>
+              <Button onClick={handleTestConnection} variant="secondary" disabled={testingConnection}>
+                {testingConnection ? 'Testing...' : 'Test Connection'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

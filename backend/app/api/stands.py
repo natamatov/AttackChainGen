@@ -90,6 +90,37 @@ async def delete_stand(
     await db.flush()
 
 
+@router.post("/test", response_model=StandTestResult)
+async def test_stand_connection_before_create(
+    body: StandCreate,
+    _: User = Depends(get_current_active_user),
+) -> StandTestResult:
+    """Проверить соединение с Elasticsearch до сохранения."""
+    try:
+        exporter = ElasticExporter(
+            elastic_url=body.elastic_url,
+            api_key=body.api_key,
+            username=body.username,
+            password=body.password,
+            tenant_id=body.tenant_id,
+            index=body.index_pattern,
+            verify_ssl=body.verify_ssl,
+        )
+        info = exporter._client.info()
+        exporter.close()
+        return StandTestResult(
+            connected=True,
+            message="Connection successful",
+            cluster_name=info.get("cluster_name"),
+            version=info.get("version", {}).get("number"),
+        )
+    except Exception as exc:
+        return StandTestResult(
+            connected=False,
+            message=f"Connection failed: {exc}",
+        )
+
+
 @router.post("/{stand_id}/test", response_model=StandTestResult)
 async def test_stand_connection(
     stand_id: int,

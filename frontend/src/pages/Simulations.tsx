@@ -43,7 +43,10 @@ export default function Simulations() {
       return
     }
     try {
-      const res = await api.post(`/simulations/run/${selectedPlaybook}?stand_id=${selectedStand}`)
+      const res = await api.post('/simulations/run', {
+        playbook_id: parseInt(selectedPlaybook),
+        stand_id: parseInt(selectedStand)
+      })
       const newSim = res.data
       setActiveRunId(newSim.id)
       setShowRun(false)
