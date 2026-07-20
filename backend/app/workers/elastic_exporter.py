@@ -127,12 +127,9 @@ class ElasticExporter:
                 for item in resp["items"]
                 if item.get("create", {}).get("error")
             ]
-            logger.warning(
-                "Bulk API: %d/%d documents failed. First error: %s",
-                len(failed),
-                len(documents),
-                failed[0].get("error") if failed else "unknown",
-            )
+            err_msg = failed[0].get("error") if failed else "unknown"
+            logger.error("Bulk API: %d/%d documents failed. First error: %s", len(failed), len(documents), err_msg)
+            raise Exception(f"Elastic Bulk Error: {err_msg}")
 
         logger.debug(
             "Bulk API: sent %d documents to '%s'",
