@@ -41,9 +41,10 @@ export default function Playbooks() {
       setNewYamlName('')
       setYamlContent('')
       fetchPlaybooks()
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      alert("Failed to import YAML playbook")
+      const detail = e.response?.data?.detail || "Failed to import YAML playbook"
+      alert(detail)
     }
   }
 
