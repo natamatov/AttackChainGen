@@ -6,7 +6,7 @@ python-box>=7.1.1
 click>=8.1.7
 elasticsearch>=8.11.0
 tenacity>=8.2.3
-pydantic>=2.4.2
+pydantic[email]>=2.4.2
 pydantic-settings>=2.0.3
 
 # Stage 2: Web API & DB & Celery
