@@ -91,6 +91,12 @@ class TemplateEngine:
 
         try:
             doc = json.loads(rendered)
+            
+            # Если шаблон использует {{ '@timestamp' }}, он срендерится в строку "@timestamp"
+            # Заменяем её на реальное значение времени
+            if doc.get("@timestamp") == "@timestamp":
+                doc["@timestamp"] = full_ctx["@timestamp"]
+                
         except json.JSONDecodeError as exc:
             raise TemplateRenderError(
                 f"Template '{tpl_file}' produced invalid JSON: {exc}\n"
