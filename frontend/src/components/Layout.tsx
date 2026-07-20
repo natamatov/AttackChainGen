@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
-import { Activity, BookOpen, Server, LogOut } from 'lucide-react'
+import { Activity, BookOpen, Server, LogOut, Play } from 'lucide-react'
 import { SimulationTracker } from '@/components/SimulationTracker'
 
 export default function Layout() {
@@ -18,6 +18,7 @@ export default function Layout() {
   const navItems = [
     { name: 'Dashboard', href: '/', icon: Activity },
     { name: 'Playbooks', href: '/playbooks', icon: BookOpen },
+    { name: 'Simulations', href: '/simulations', icon: Play },
     { name: 'Stands', href: '/stands', icon: Server },
   ]
 

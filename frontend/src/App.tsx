@@ -5,10 +5,8 @@ import Playbooks from '@/pages/Playbooks'
 import PlaybookBuilder from '@/pages/PlaybookBuilder'
 import Layout from '@/components/Layout'
 
-// Placeholders for other pages
-function Stands() {
-  return <div>Stands List (coming soon)</div>
-}
+import Stands from '@/pages/Stands'
+import Simulations from '@/pages/Simulations'
 
 export default function App() {
   return (
@@ -22,6 +20,7 @@ export default function App() {
           <Route path="playbooks" element={<Playbooks />} />
           <Route path="playbooks/builder" element={<PlaybookBuilder />} />
           <Route path="stands" element={<Stands />} />
+          <Route path="simulations" element={<Simulations />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
