@@ -19,7 +19,10 @@ def deploy():
 
     print("Connected. Running deployment commands...")
     commands = [
-        "echo 'eramba' | sudo -S docker exec attackchain_backend curl -s -X POST -H 'Content-Type: application/json' -d '{\"name\":\"test\", \"elastic_url\":\"http://test\", \"api_key\":\"x\", \"index_pattern\":\"y\"}' http://localhost:8000/api/stands/"
+        "if [ ! -d 'AttackChainGen' ]; then git clone https://github.com/natamatov/AttackChainGen.git; fi",
+        "cd AttackChainGen && git pull origin master",
+        "cd AttackChainGen && touch .env",
+        "cd AttackChainGen && echo 'eramba' | sudo -S docker compose up -d --build --force-recreate"
     ]
 
     for cmd in commands:
