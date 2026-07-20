@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
 
-    # Database
-    database_url: str = "postgresql+asyncpg://attackchain:strongpassword@localhost:5432/attackchaindb"
+    # Database (SQLite by default for local development without Docker)
+    database_url: str = "sqlite+aiosqlite:///./attackchain.db"
 
     # Redis / Celery
     redis_url: str = "redis://localhost:6379/0"
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     # First Admin
-    admin_email: str = "admin@attackchain.local"
-    admin_password: str = "Admin1234!"
+    first_superuser: str = "admin@attackchain.local"
+    first_superuser_password: str = "Admin1234!"
 
     @property
     def cors_origins_list(self) -> list[str]:
