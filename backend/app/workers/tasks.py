@@ -189,6 +189,9 @@ def run_simulation(self: Task, run_id: int) -> dict:
         exporter = ElasticExporter(
             elastic_url=stand.elastic_url,
             api_key=stand.api_key,
+            username=stand.username,
+            password=stand.password,
+            tenant_id=stand.tenant_id,
             index=stand.index_pattern,
             verify_ssl=stand.verify_ssl,
         )

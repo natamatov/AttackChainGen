@@ -19,7 +19,7 @@ def deploy():
 
     print("Connected. Running deployment commands...")
     commands = [
-        "echo 'eramba' | sudo -S docker logs attackchain_backend --tail 100"
+        "echo 'eramba' | sudo -S docker exec attackchain_backend curl -s -X POST -H 'Content-Type: application/json' -d '{\"name\":\"test\", \"elastic_url\":\"http://test\", \"api_key\":\"x\", \"index_pattern\":\"y\"}' http://localhost:8000/api/stands/"
     ]
 
     for cmd in commands:

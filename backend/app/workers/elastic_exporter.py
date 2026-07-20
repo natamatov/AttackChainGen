@@ -39,17 +39,34 @@ class ElasticExporter:
     def __init__(
         self,
         elastic_url: str,
-        api_key: str,
+        api_key: str | None = None,
+        username: str | None = None,
+        password: str | None = None,
+        tenant_id: str | None = None,
         index: str = "logs-attackchain-default",
         verify_ssl: bool = False,
     ) -> None:
         self._index = index
-        self._client = Elasticsearch(
-            hosts=[elastic_url],
-            api_key=api_key,
-            verify_certs=verify_ssl,
-            ssl_show_warn=False,
-        )
+        
+        client_kwargs = {
+            "hosts": [elastic_url],
+            "verify_certs": verify_ssl,
+            "ssl_show_warn": False,
+        }
+        
+        if api_key:
+            client_kwargs["api_key"] = api_key
+        elif username and password:
+            client_kwargs["basic_auth"] = (username, password)
+            
+        if tenant_id:
+            # For OpenSearch / OpenDistro security
+            client_kwargs["headers"] = {
+                "securitytenant": tenant_id,
+                "Opendistro-Security-Tenant": tenant_id
+            }
+
+        self._client = Elasticsearch(**client_kwargs)
 
     # ------------------------------------------------------------------ #
     # Public API                                                           #

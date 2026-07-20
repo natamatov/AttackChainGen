@@ -9,7 +9,7 @@ export default function Stands() {
   const [stands, setStands] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [newStand, setNewStand] = useState({ name: '', description: '', elastic_url: '', api_key: '', index_pattern: 'logs-attackchain-default' })
+  const [newStand, setNewStand] = useState({ name: '', description: '', elastic_url: '', api_key: '', username: '', password: '', tenant_id: '', index_pattern: 'logs-attackchain-default' })
 
   const fetchStands = async () => {
     try {
@@ -30,7 +30,7 @@ export default function Stands() {
     try {
       await api.post('/stands/', newStand)
       setShowAdd(false)
-      setNewStand({ name: '', description: '', elastic_url: '', api_key: '', index_pattern: 'logs-attackchain-default' })
+      setNewStand({ name: '', description: '', elastic_url: '', api_key: '', username: '', password: '', tenant_id: '', index_pattern: 'logs-attackchain-default' })
       fetchStands()
     } catch (e) {
       console.error(e)
@@ -68,8 +68,20 @@ export default function Stands() {
                 <Input value={newStand.elastic_url} onChange={e => setNewStand({...newStand, elastic_url: e.target.value})} placeholder="https://elastic.internal:9200" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">API Key / Auth Token</label>
-                <Input type="password" value={newStand.api_key} onChange={e => setNewStand({...newStand, api_key: e.target.value})} placeholder="id:key (or any string)" />
+                <label className="text-sm font-medium text-muted-foreground">API Key (Optional)</label>
+                <Input type="password" value={newStand.api_key} onChange={e => setNewStand({...newStand, api_key: e.target.value})} placeholder="id:key (or base64)" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Username (Optional)</label>
+                <Input value={newStand.username} onChange={e => setNewStand({...newStand, username: e.target.value})} placeholder="Basic Auth User" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password (Optional)</label>
+                <Input type="password" value={newStand.password} onChange={e => setNewStand({...newStand, password: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tenant ID (Optional)</label>
+                <Input value={newStand.tenant_id} onChange={e => setNewStand({...newStand, tenant_id: e.target.value})} placeholder="e.g. global_tenant" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Index Pattern</label>

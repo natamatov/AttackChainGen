@@ -104,7 +104,10 @@ class Stand(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     elastic_url: Mapped[str] = mapped_column(String(512), nullable=False)
-    api_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    api_key: Mapped[str | None] = mapped_column(String(512))
+    username: Mapped[str | None] = mapped_column(String(255))
+    password: Mapped[str | None] = mapped_column(String(512))
+    tenant_id: Mapped[str | None] = mapped_column(String(255))
     index_pattern: Mapped[str] = mapped_column(
         String(255), default="logs-attackchain-default", nullable=False
     )

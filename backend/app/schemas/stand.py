@@ -12,7 +12,10 @@ class StandCreate(BaseModel):
     name: str = Field(max_length=255)
     description: str | None = None
     elastic_url: str = Field(description="URL Elasticsearch, например https://localhost:9200")
-    api_key: str = Field(description="API key в формате 'id:key'")
+    api_key: str | None = Field(default=None, description="API key в формате 'id:key'")
+    username: str | None = Field(default=None, description="Username for basic auth")
+    password: str | None = Field(default=None, description="Password for basic auth")
+    tenant_id: str | None = Field(default=None, description="Tenant ID (e.g. for OpenSearch)")
     index_pattern: str = "logs-attackchain-default"
     verify_ssl: bool = False
 
@@ -22,6 +25,9 @@ class StandUpdate(BaseModel):
     description: str | None = None
     elastic_url: str | None = None
     api_key: str | None = None
+    username: str | None = None
+    password: str | None = None
+    tenant_id: str | None = None
     index_pattern: str | None = None
     verify_ssl: bool | None = None
     is_active: bool | None = None
@@ -32,6 +38,7 @@ class StandOut(BaseModel):
     name: str
     description: str | None
     elastic_url: str
+    tenant_id: str | None
     index_pattern: str
     verify_ssl: bool
     is_active: bool
