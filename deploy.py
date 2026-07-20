@@ -19,10 +19,7 @@ def deploy():
 
     print("Connected. Running deployment commands...")
     commands = [
-        "if [ ! -d 'AttackChainGen' ]; then git clone https://github.com/natamatov/AttackChainGen.git; fi",
-        "cd AttackChainGen && git pull origin master",
-        "cd AttackChainGen && touch .env",
-        "cd AttackChainGen && echo 'eramba' | sudo -S docker compose up -d --build --force-recreate"
+        "echo 'eramba' | sudo -S docker logs attackchain_backend --tail 100"
     ]
 
     for cmd in commands:

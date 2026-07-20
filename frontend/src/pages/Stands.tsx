@@ -9,7 +9,7 @@ export default function Stands() {
   const [stands, setStands] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [newStand, setNewStand] = useState({ name: '', description: '', elastic_url: '', elastic_user: '', elastic_pass: '' })
+  const [newStand, setNewStand] = useState({ name: '', description: '', elastic_url: '', api_key: '', index_pattern: 'logs-attackchain-default' })
 
   const fetchStands = async () => {
     try {
@@ -30,7 +30,7 @@ export default function Stands() {
     try {
       await api.post('/stands/', newStand)
       setShowAdd(false)
-      setNewStand({ name: '', description: '', elastic_url: '', elastic_user: '', elastic_pass: '' })
+      setNewStand({ name: '', description: '', elastic_url: '', api_key: '', index_pattern: 'logs-attackchain-default' })
       fetchStands()
     } catch (e) {
       console.error(e)
@@ -68,12 +68,12 @@ export default function Stands() {
                 <Input value={newStand.elastic_url} onChange={e => setNewStand({...newStand, elastic_url: e.target.value})} placeholder="https://elastic.internal:9200" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Username</label>
-                <Input value={newStand.elastic_user} onChange={e => setNewStand({...newStand, elastic_user: e.target.value})} />
+                <label className="text-sm font-medium">API Key / Auth Token</label>
+                <Input type="password" value={newStand.api_key} onChange={e => setNewStand({...newStand, api_key: e.target.value})} placeholder="id:key (or any string)" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Password</label>
-                <Input type="password" value={newStand.elastic_pass} onChange={e => setNewStand({...newStand, elastic_pass: e.target.value})} />
+                <label className="text-sm font-medium">Index Pattern</label>
+                <Input value={newStand.index_pattern} onChange={e => setNewStand({...newStand, index_pattern: e.target.value})} placeholder="logs-attackchain-default" />
               </div>
             </div>
             <Button onClick={handleCreate} className="mt-4">Save Stand</Button>
