@@ -203,13 +203,19 @@ class ContextManager:
 
     def _init_global(self, ctx: dict[str, Any]) -> None:
         """Инициализировать глобальный контекст, заполняя пропуски рандомом."""
-        self._global["host_name"] = ctx.get("host.name") or self.gen_hostname()
-        self._global["host_domain"] = ctx.get("host.domain") or self.gen_corp_domain()
-        self._global["host_ip"] = ctx.get("host.ip") or self.gen_internal_ip()
-        self._global["user_name"] = ctx.get("user.name") or self.gen_username()
-        self._global["user_domain"] = ctx.get("user.domain") or self._global["host_domain"]
-        self._global["agent_id"] = ctx.get("agent.id") or self._fake.uuid4()
-        self._global["agent_version"] = ctx.get("agent.version") or "14.0.0"
+        for k, v in ctx.items():
+            if v is not None:
+                self._global[k] = v
+                if "." in k:
+                    self._global[k.replace(".", "_")] = v
+
+        self._global.setdefault("host_name", ctx.get("host.name") or self.gen_hostname())
+        self._global.setdefault("host_domain", ctx.get("host.domain") or self.gen_corp_domain())
+        self._global.setdefault("host_ip", ctx.get("host.ip") or self.gen_internal_ip())
+        self._global.setdefault("user_name", ctx.get("user.name") or self.gen_username())
+        self._global.setdefault("user_domain", ctx.get("user.domain") or self._global.get("host_domain"))
+        self._global.setdefault("agent_id", ctx.get("agent.id") or self._fake.uuid4())
+        self._global.setdefault("agent_version", ctx.get("agent.version") or "14.0.0")
 
     def _resolve_value(
         self,
