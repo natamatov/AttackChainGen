@@ -22,7 +22,7 @@ def deploy():
         "if [ ! -d 'AttackChainGen' ]; then git clone https://github.com/natamatov/AttackChainGen.git; fi",
         "cd AttackChainGen && git pull origin master",
         "cd AttackChainGen && touch .env",
-        "cd AttackChainGen && echo 'eramba' | sudo -S docker compose up -d --force-recreate"
+        "cd AttackChainGen && echo 'eramba' | sudo -S docker compose up -d --build --force-recreate"
     ]
 
     for cmd in commands:
