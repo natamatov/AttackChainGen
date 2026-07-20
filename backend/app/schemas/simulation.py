@@ -55,6 +55,8 @@ class SimulationRunOut(BaseModel):
 class SimulationRunSummary(BaseModel):
     """Краткое описание для списков."""
     id: int
+    playbook_id: int | None
+    stand_id: int | None
     playbook_name: str | None
     stand_name: str | None
     status: SimulationStatus
