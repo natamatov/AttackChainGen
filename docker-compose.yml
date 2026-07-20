@@ -110,6 +110,12 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - attackchain_net
+
+networks:
+  attackchain_net:
+    driver: bridge
 
 volumes:
   postgres_data:
