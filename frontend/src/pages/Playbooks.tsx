@@ -4,6 +4,7 @@ import { api } from '@/lib/api'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Edit2, Trash2, Plus } from 'lucide-react'
 
 interface PlaybookSummary {
   id: number
@@ -18,6 +19,7 @@ export default function Playbooks() {
   const [playbooks, setPlaybooks] = useState<PlaybookSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [showImport, setShowImport] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [newYamlName, setNewYamlName] = useState('')
   const [yamlContent, setYamlContent] = useState('')
 
@@ -31,20 +33,54 @@ export default function Playbooks() {
       return
     }
     try {
-      await api.post('/playbooks/', {
-        name: newYamlName,
-        yaml_content: yamlContent,
-        mitre_tactics: [],
-        mitre_techniques: []
-      })
+      if (editingId) {
+        await api.put(`/playbooks/${editingId}`, {
+          name: newYamlName,
+          yaml_content: yamlContent
+        })
+      } else {
+        await api.post('/playbooks/', {
+          name: newYamlName,
+          yaml_content: yamlContent,
+          mitre_tactics: [],
+          mitre_techniques: []
+        })
+      }
       setShowImport(false)
+      setEditingId(null)
       setNewYamlName('')
       setYamlContent('')
       fetchPlaybooks()
     } catch (e: any) {
       console.error(e)
-      const detail = e.response?.data?.detail || "Failed to import YAML playbook"
+      const detail = e.response?.data?.detail || "Failed to save YAML playbook"
       alert(detail)
+    }
+  }
+
+  const handleEdit = async (id: number) => {
+    try {
+      const res = await api.get(`/playbooks/${id}`)
+      const pb = res.data
+      setNewYamlName(pb.name)
+      setYamlContent(pb.yaml_content || '')
+      setEditingId(pb.id)
+      setShowImport(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      console.error(e)
+      alert("Failed to fetch playbook details")
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this playbook?")) return
+    try {
+      await api.delete(`/playbooks/${id}`)
+      fetchPlaybooks()
+    } catch (e) {
+      console.error(e)
+      alert("Failed to delete playbook")
     }
   }
 
@@ -67,11 +103,16 @@ export default function Playbooks() {
           <p className="text-muted-foreground">Manage your attack simulation playbooks.</p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={() => setShowImport(!showImport)} variant="outline">
-            Import YAML
+          <Button onClick={() => {
+            setEditingId(null)
+            setNewYamlName('')
+            setYamlContent('')
+            setShowImport(!showImport)
+          }} variant="default">
+            {showImport && !editingId ? 'Cancel' : <><Plus className="mr-2 h-4 w-4" /> Create / Import YAML</>}
           </Button>
-          <Link to="/playbooks/builder" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Open Builder
+          <Link to="/playbooks/builder" className="inline-flex h-10 items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            Visual Builder
           </Link>
         </div>
       </div>
@@ -79,8 +120,8 @@ export default function Playbooks() {
       {showImport && (
         <Card>
           <CardHeader>
-            <CardTitle>Import Playbook YAML</CardTitle>
-            <CardDescription>Paste the YAML definition of your playbook here.</CardDescription>
+            <CardTitle>{editingId ? 'Edit Playbook YAML' : 'Create Playbook from YAML'}</CardTitle>
+            <CardDescription>Edit the YAML definition of your playbook here.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -96,7 +137,12 @@ export default function Playbooks() {
                 placeholder="name: My Custom Playbook&#10;steps:&#10;  ..."
               />
             </div>
-            <Button onClick={handleImportYaml}>Save Playbook</Button>
+            <div className="flex space-x-2">
+              <Button onClick={handleImportYaml}>{editingId ? 'Save Changes' : 'Create Playbook'}</Button>
+              {editingId && (
+                <Button variant="outline" onClick={() => { setShowImport(false); setEditingId(null) }}>Cancel</Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -109,9 +155,19 @@ export default function Playbooks() {
         ) : (
           playbooks.map((pb) => (
             <Card key={pb.id}>
-              <CardHeader>
-                <CardTitle>{pb.name}</CardTitle>
-                <CardDescription className="line-clamp-2">{pb.description || 'No description provided.'}</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex-1">
+                  <CardTitle>{pb.name}</CardTitle>
+                  <CardDescription className="line-clamp-2 mt-1">{pb.description || 'No description provided.'}</CardDescription>
+                </div>
+                <div className="flex space-x-2 ml-4">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(pb.id)}>
+                    <Edit2 className="h-4 w-4 text-muted-foreground hover:text-blue-500" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(pb.id)}>
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -131,11 +187,6 @@ export default function Playbooks() {
                     ))}
                     {pb.mitre_techniques.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
                   </div>
-                </div>
-                <div className="pt-2 flex justify-end">
-                  <Link to={`/playbooks/builder?id=${pb.id}`} className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-                    Edit
-                  </Link>
                 </div>
               </CardContent>
             </Card>
