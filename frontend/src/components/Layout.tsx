@@ -1,11 +1,14 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useAppStore } from '@/store/appStore'
 import { Activity, BookOpen, Server, LogOut } from 'lucide-react'
+import { SimulationTracker } from '@/components/SimulationTracker'
 
 export default function Layout() {
   const token = useAuthStore((state) => state.token)
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
+  const activeRunId = useAppStore((state) => state.activeRunId)
   const location = useLocation()
 
   if (!token) {
@@ -61,6 +64,8 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      <SimulationTracker runId={activeRunId} />
     </div>
   )
 }
