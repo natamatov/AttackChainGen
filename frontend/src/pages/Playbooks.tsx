@@ -62,6 +62,7 @@ export default function Playbooks() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Playbooks</h2>
           <p className="text-muted-foreground">Manage your attack simulation playbooks.</p>
+        </div>
         <div className="flex space-x-2">
           <Button onClick={() => setShowImport(!showImport)} variant="outline">
             Import YAML
