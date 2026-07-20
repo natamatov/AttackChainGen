@@ -1,0 +1,75 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["authentication"],
+    "type": ["start", "denied"],
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "code": "4625",
+    "dataset": "windows.security",
+    "module": "windows",
+    "outcome": "failure"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}"
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "source": {
+    "ip": "{{ source_ip | default('10.10.10.100') }}",
+    "port": {{ source_port | default(range(49152, 65535) | random) }},
+    "domain": "{{ source_hostname | default('UNKNOWN') }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Security-Auditing",
+    "event_id": 4625,
+    "channel": "Security",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(100000, 999999) | random) }},
+    "keywords": ["Audit Failure"],
+    "task": "Logon",
+    "opcode": "Info",
+    "event_data": {
+      "SubjectUserSid": "S-1-0-0",
+      "SubjectUserName": "-",
+      "SubjectDomainName": "-",
+      "SubjectLogonId": "0x0",
+      "TargetUserSid": "S-1-0-0",
+      "TargetUserName": "{{ user_name }}",
+      "TargetDomainName": "{{ user_domain }}",
+      "Status": "0xc000006d",
+      "SubStatus": "0xc000006a",
+      "LogonType": "{{ logon_type | default(3) }}",
+      "LogonProcessName": "{{ logon_process | default('NtLmSsp') }}",
+      "AuthenticationPackageName": "NTLM",
+      "WorkstationName": "{{ source_hostname | default('UNKNOWN') }}",
+      "TransmittedServices": "-",
+      "LmPackageName": "-",
+      "KeyLength": "0",
+      "ProcessId": "0x0",
+      "ProcessName": "-",
+      "IpAddress": "{{ source_ip | default('10.10.10.100') }}",
+      "IpPort": "{{ source_port | default(range(49152, 65535) | random) }}"
+    }
+  }
+}
