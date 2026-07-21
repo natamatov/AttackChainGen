@@ -39,20 +39,20 @@ async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_db)):
 
 """
     for zone in env.zones:
-        prompt += f"Сетевой сегмент: {zone.name} ({zone.cidr})\n"
+        prompt += f"Сетевой сегмент: {zone.name} (Диапазон IP: {zone.ip_range})\n"
         if zone.assets:
             for asset in zone.assets:
                 role_str = f" - {asset.role}" if asset.role else ""
                 prompt += f"- {asset.hostname} ({asset.ip_address}){role_str}\n"
         else:
-            prompt += "- (Нет заданных хостов)\n"
+            prompt += "- (Нет заданных хостов. Ты можешь использовать любые IP-адреса из указанного диапазона этого сегмента)\n"
         prompt += "\n"
         
     prompt += f"ДОСТУПНЫЕ ШАБЛОНЫ СОБЫТИЙ:\n- {', '.join(templates) if templates else 'Нет шаблонов'}\n\n"
     
     prompt += """ЗАДАЧА:
 Напиши сценарий атаки, логически выстраивая шаги (Initial Access -> Recon -> Lateral Movement). 
-В полях source_ip, host.ip и других IP-адресах используй строго IP-адреса из предоставленного выше списка.
+В полях source_ip, host.ip и других IP-адресах используй строго IP-адреса из предоставленного выше списка или пула.
 Для каждого шага обязательно добавь description и, если необходимо, задержку delay_from_prev (например "5s", "1m").
 """
 

@@ -17,7 +17,7 @@ interface NetworkZone {
   id: number
   environment_id: number
   name: string
-  cidr: string
+  ip_range: string
   description?: string
   assets: Asset[]
 }
@@ -34,7 +34,7 @@ export default function Environments() {
   const [environments, setEnvironments] = useState<Environment[]>([])
 
   const [newEnv, setNewEnv] = useState({ name: '', domain: '', description: '' })
-  const [newZone, setNewZone] = useState({ envId: 0, name: '', cidr: '' })
+  const [newZone, setNewZone] = useState({ envId: 0, name: '', ip_range: '' })
   const [newAsset, setNewAsset] = useState({ zoneId: 0, hostname: '', ip_address: '', role: '' })
 
   useEffect(() => {
@@ -64,14 +64,14 @@ export default function Environments() {
   }
 
   const createZone = async (envId: number) => {
-    if (!newZone.name || !newZone.cidr) {
-      window.alert("Please fill in both Name and CIDR for the zone.")
+    if (!newZone.name || !newZone.ip_range) {
+      window.alert("Please fill in both Name and IP Range for the zone.")
       return
     }
     try {
-      const res = await api.post(`/environments/${envId}/zones`, { name: newZone.name, cidr: newZone.cidr })
+      const res = await api.post(`/environments/${envId}/zones`, { name: newZone.name, ip_range: newZone.ip_range })
       if (res.status === 201 || res.status === 200) {
-        setNewZone({ envId: 0, name: '', cidr: '' })
+        setNewZone({ envId: 0, name: '', ip_range: '' })
         fetchEnvironments()
       }
     } catch (err: any) {
@@ -142,7 +142,7 @@ export default function Environments() {
             
             <div className="flex gap-4 items-end bg-muted/20 p-4 rounded-md border border-dashed">
               <div className="space-y-1"><label className="text-xs">Имя подсети (Zone)</label><Input placeholder="Servers" value={newZone.envId === env.id ? newZone.name : ''} onChange={e => setNewZone({...newZone, envId: env.id, name: e.target.value})} /></div>
-              <div className="space-y-1"><label className="text-xs">CIDR</label><Input placeholder="192.168.100.0/24" value={newZone.envId === env.id ? newZone.cidr : ''} onChange={e => setNewZone({...newZone, envId: env.id, cidr: e.target.value})} /></div>
+              <div className="space-y-1"><label className="text-xs">Диапазон IP (Range)</label><Input placeholder="192.168.100.10-192.168.100.20" value={newZone.envId === env.id ? newZone.ip_range : ''} onChange={e => setNewZone({...newZone, envId: env.id, ip_range: e.target.value})} /></div>
               <Button size="sm" variant="secondary" onClick={() => createZone(env.id)}><Plus className="w-4 h-4 mr-2"/> Добавить зону</Button>
             </div>
 
@@ -152,7 +152,7 @@ export default function Environments() {
                   <CardHeader className="py-3 bg-muted/30 flex flex-row items-center justify-between">
                     <div>
                       <CardTitle className="text-sm font-medium flex items-center gap-2"><Network className="w-4 h-4 text-blue-500"/> {zone.name}</CardTitle>
-                      <CardDescription className="text-xs">{zone.cidr}</CardDescription>
+                      <CardDescription className="text-xs">{zone.ip_range}</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => deleteZone(zone.id)}>
                       <Trash2 className="w-3 h-3" />

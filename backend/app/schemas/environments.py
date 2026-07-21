@@ -29,7 +29,7 @@ class AssetOut(AssetBase):
 # ─────────────────────────────────────────────────────────────────────── #
 class NetworkZoneBase(BaseModel):
     name: str = Field(..., description="Название зоны, например Servers")
-    cidr: str = Field(..., description="Подсеть, например 192.168.100.0/24")
+    ip_range: str = Field(..., description="Диапазон IP, например 192.168.100.10-192.168.100.20")
     description: str | None = None
 
 class NetworkZoneCreate(NetworkZoneBase):
@@ -37,7 +37,7 @@ class NetworkZoneCreate(NetworkZoneBase):
 
 class NetworkZoneUpdate(BaseModel):
     name: str | None = None
-    cidr: str | None = None
+    ip_range: str | None = None
     description: str | None = None
 
 class NetworkZoneOut(NetworkZoneBase):

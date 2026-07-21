@@ -259,7 +259,7 @@ class NetworkZone(Base):
         ForeignKey("fictional_environments.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    cidr: Mapped[str] = mapped_column(String(255), nullable=False)
+    ip_range: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
 
     # Relationships
@@ -269,7 +269,7 @@ class NetworkZone(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<NetworkZone id={self.id} name={self.name} cidr={self.cidr}>"
+        return f"<NetworkZone id={self.id} name={self.name} ip_range={self.ip_range}>"
 
 
 class Asset(Base):
