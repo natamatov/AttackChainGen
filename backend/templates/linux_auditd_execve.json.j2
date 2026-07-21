@@ -1,0 +1,54 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version | default('8.11.0') }}" },
+  "event": {
+    "kind": "event",
+    "category": ["process"],
+    "type": ["start"],
+    "provider": "auditd",
+    "module": "auditd",
+    "dataset": "auditd.log",
+    "action": "executed",
+    "outcome": "success"
+  },
+  "host": {
+    "name": "{{ host_name | default('linux-srv') }}",
+    "hostname": "{{ host_name | default('linux-srv') }}",
+    "ip": ["{{ host_ip | default('127.0.0.1') }}"],
+    "os": {
+      "type": "linux",
+      "platform": "ubuntu",
+      "family": "debian",
+      "name": "Ubuntu",
+      "version": "22.04 LTS"
+    }
+  },
+  "user": {
+    "name": "{{ user_name | default('root') }}",
+    "id": "{{ user_uid | default('0') }}"
+  },
+  "process": {
+    "pid": {{ process_pid | default(range(1000, 9999) | random) }},
+    "name": "{{ process_name | default('bash') }}",
+    "executable": "{{ process_path | default('/bin/bash') }}",
+    "command_line": "{{ process_command_line | default('/bin/bash') }}",
+    "parent": {
+      "pid": {{ parent_pid | default(range(100, 999) | random) }}
+    }
+  },
+  "auditd": {
+    "log": {
+      "record_type": "EXECVE",
+      "sequence": {{ range(10000, 99999) | random }},
+      "a0": "{{ process_name | default('bash') }}",
+      "a1": "{{ process_command_line | default('') }}",
+      "res": "success"
+    }
+  },
+  "log": { "level": "info" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

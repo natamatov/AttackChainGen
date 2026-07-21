@@ -1,0 +1,44 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version | default('8.11.0') }}" },
+  "event": {
+    "kind": "event",
+    "category": ["authentication"],
+    "type": ["info"],
+    "provider": "sshd",
+    "module": "system",
+    "dataset": "system.auth",
+    "action": "ssh_login",
+    "outcome": "{{ 'failure' if is_failed_login | default(false) else 'success' }}"
+  },
+  "host": {
+    "name": "{{ host_name | default('linux-srv') }}",
+    "hostname": "{{ host_name | default('linux-srv') }}",
+    "ip": ["{{ host_ip | default('127.0.0.1') }}"],
+    "os": {
+      "type": "linux",
+      "platform": "ubuntu",
+      "family": "debian"
+    }
+  },
+  "user": {
+    "name": "{{ user_name | default('root') }}",
+    "id": "{{ user_uid | default('0') }}"
+  },
+  "source": {
+    "ip": "{{ source_ip | default('10.0.0.2') }}",
+    "port": {{ source_port | default(range(10000, 60000) | random) }}
+  },
+  "network": {
+    "transport": "tcp",
+    "protocol": "ssh",
+    "direction": "inbound"
+  },
+  "message": "{{ 'Failed password for ' if is_failed_login | default(false) else 'Accepted publickey for ' }}{{ user_name | default('root') }} from {{ source_ip | default('10.0.0.2') }} port {{ source_port | default(range(10000, 60000) | random) }} ssh2",
+  "log": { "level": "info" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}
