@@ -254,12 +254,14 @@ def run_simulation(self: Task, run_id: int) -> dict:
                 full_ctx = ctx_manager.build_step_context(step.id, resolved, step.depends_on)
                 doc = tpl_engine.render(step.template, full_ctx, timestamp=ts)
                 
-                if run.mode.value == "historical":
+                if drift_engine.mode == DriftMode.HISTORICAL:
                     batch.append(doc)
                     if len(batch) >= 100:
-                        exporter.send_bulk(batch)
-                        events_sent += len(batch)
-                        batch.clear()
+                        try:
+                            exporter.send_bulk(batch)
+                            events_sent += len(batch)
+                        finally:
+                            batch.clear()
                 else:
                     exporter.send_event(doc)
                     events_sent += 1
