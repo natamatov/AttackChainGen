@@ -14,7 +14,7 @@
     "name": "{{ host_name }}",
     "hostname": "{{ host_name }}",
     "domain": "{{ host_domain }}",
-    "ip": ["{{ host_ip }}"],
+    "ip": ["{{ host_ip | default('10.0.0.1') }}"],
     "os": {
       "type": "windows",
       "platform": "windows",
