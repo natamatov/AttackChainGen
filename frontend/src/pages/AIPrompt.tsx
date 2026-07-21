@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Copy, Sparkles } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
 
 interface Environment {
   id: number
@@ -16,7 +14,6 @@ export default function AIPrompt() {
   const [selectedEnvId, setSelectedEnvId] = useState<string>('')
   const [prompt, setPrompt] = useState<string>('')
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
 
   useEffect(() => {
     fetchEnvironments()
@@ -41,10 +38,10 @@ export default function AIPrompt() {
       if (data.prompt) {
         setPrompt(data.prompt)
       } else {
-        toast({ title: 'Error', description: data.detail || 'Failed to generate prompt', variant: 'destructive' })
+        window.alert(data.detail || 'Failed to generate prompt')
       }
     } catch (err) {
-      toast({ title: 'Error', description: 'Server error', variant: 'destructive' })
+      window.alert('Server error')
     } finally {
       setLoading(false)
     }
@@ -52,10 +49,7 @@ export default function AIPrompt() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(prompt)
-    toast({
-      title: 'Copied!',
-      description: 'Prompt copied to clipboard.',
-    })
+    window.alert('Prompt copied to clipboard.')
   }
 
   return (
@@ -73,20 +67,20 @@ export default function AIPrompt() {
           <CardDescription>Выберите вымышленную сеть для генерации промпта</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4 items-end">
-          <div className="w-64 space-y-2">
+          <div className="w-64 space-y-2 flex flex-col">
             <label className="text-sm font-medium">Environment</label>
-            <Select value={selectedEnvId} onValueChange={setSelectedEnvId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Environment" />
-              </SelectTrigger>
-              <SelectContent>
-                {environments.map(env => (
-                  <SelectItem key={env.id} value={env.id.toString()}>
-                    {env.name} ({env.domain})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select 
+              value={selectedEnvId} 
+              onChange={e => setSelectedEnvId(e.target.value)}
+              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Select Environment</option>
+              {environments.map(env => (
+                <option key={env.id} value={env.id.toString()}>
+                  {env.name} ({env.domain})
+                </option>
+              ))}
+            </select>
           </div>
           <Button onClick={generatePrompt} disabled={!selectedEnvId || loading} className="gap-2">
             <Sparkles className="w-4 h-4" />

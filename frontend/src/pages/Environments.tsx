@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Server, Globe, Network } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
 import { Input } from '@/components/ui/input'
 
 interface Asset {
@@ -32,8 +31,6 @@ interface Environment {
 
 export default function Environments() {
   const [environments, setEnvironments] = useState<Environment[]>([])
-  const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
 
   const [newEnv, setNewEnv] = useState({ name: '', domain: '', description: '' })
   const [newZone, setNewZone] = useState({ envId: 0, name: '', cidr: '' })
@@ -44,15 +41,12 @@ export default function Environments() {
   }, [])
 
   const fetchEnvironments = async () => {
-    setLoading(true)
     try {
       const res = await fetch('http://localhost:8000/api/environments')
       const data = await res.json()
       setEnvironments(data)
     } catch (err) {
-      toast({ title: 'Error', description: 'Failed to fetch environments', variant: 'destructive' })
-    } finally {
-      setLoading(false)
+      window.alert('Failed to fetch environments')
     }
   }
 
