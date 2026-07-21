@@ -219,3 +219,73 @@ class SimulationRun(Base):
 
     def __repr__(self) -> str:
         return f"<SimulationRun id={self.id} status={self.status}>"
+
+
+# ─────────────────────────────────────────────────────────────────────── #
+# Fictional Network Models (CMDB)                                          #
+# ─────────────────────────────────────────────────────────────────────── #
+
+class FictionalEnvironment(Base):
+    """Среда / вымышленная сеть (например, corp.local)."""
+    __tablename__ = "fictional_environments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    domain: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    zones: Mapped[list["NetworkZone"]] = relationship(
+        back_populates="environment", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<FictionalEnvironment id={self.id} name={self.name}>"
+
+
+class NetworkZone(Base):
+    """Сетевая зона (например, Servers 192.168.100.0/24)."""
+    __tablename__ = "network_zones"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    environment_id: Mapped[int] = mapped_column(
+        ForeignKey("fictional_environments.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    cidr: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+
+    # Relationships
+    environment: Mapped["FictionalEnvironment"] = relationship(back_populates="zones")
+    assets: Mapped[list["Asset"]] = relationship(
+        back_populates="zone", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<NetworkZone id={self.id} name={self.name} cidr={self.cidr}>"
+
+
+class Asset(Base):
+    """Конкретный узел сети (сервер, рабочая станция)."""
+    __tablename__ = "assets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    zone_id: Mapped[int] = mapped_column(
+        ForeignKey("network_zones.id", ondelete="CASCADE"), nullable=False
+    )
+    hostname: Mapped[str] = mapped_column(String(255), nullable=False)
+    ip_address: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str | None] = mapped_column(String(255))
+
+    # Relationships
+    zone: Mapped["NetworkZone"] = relationship(back_populates="assets")
+
+    def __repr__(self) -> str:
+        return f"<Asset id={self.id} hostname={self.hostname} ip={self.ip_address}>"
