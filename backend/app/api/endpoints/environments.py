@@ -100,8 +100,10 @@ async def create_zone(
     zone = NetworkZone(**zone_in.model_dump(), environment_id=env_id)
     db.add(zone)
     await db.commit()
-    await db.refresh(zone)
-    return zone
+    
+    stmt = select(NetworkZone).options(selectinload(NetworkZone.assets)).where(NetworkZone.id == zone.id)
+    res = await db.execute(stmt)
+    return res.scalars().first()
 
 @router.delete("/zones/{zone_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_zone(zone_id: int, db: AsyncSession = Depends(get_db)):
