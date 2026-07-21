@@ -143,3 +143,8 @@ async def get_artifacts(
         "events_sent": run.events_sent,
         "artifacts": run.artifacts or {},
     }
+
+@router.get("/last-error/debug")
+async def get_last_error(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(SimulationRun.error_message).order_by(SimulationRun.id.desc()).limit(1))
+    return {"error": result.scalar()}
