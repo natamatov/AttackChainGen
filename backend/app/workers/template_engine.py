@@ -46,6 +46,55 @@ class TemplateEngine:
         # Добавляем фильтры
         self._env.filters["tojson"] = json.dumps
 
+        # Sensible defaults for all common ECS/Windows fields to prevent StrictUndefined errors
+        # when the AI forgets to provide them in the playbook fields.
+        self.default_context = {
+            "process_pid": 1234,
+            "process_name": "unknown_process.exe",
+            "process_path": "C:\\Windows\\System32\\unknown_process.exe",
+            "process_command_line": "unknown_process.exe",
+            "parent_pid": 4,
+            "parent_name": "System",
+            "parent_path": "C:\\Windows\\System32\\System",
+            "user_name": "system",
+            "user_domain": "WORKGROUP",
+            "user_sid": "S-1-5-18",
+            "host_name": "DESKTOP-UNKNOWN",
+            "host_domain": "WORKGROUP",
+            "host_ip": "10.0.0.1",
+            "agent_id": "00000000-0000-0000-0000-000000000000",
+            "agent_version": "8.11.0",
+            "event_id": 4688,
+            "is_elevated": False,
+            "is_noise": False,
+            "mitre_tactic": "Unknown",
+            "mitre_technique": "T0000",
+            "mitre_technique_name": "Unknown",
+            "file_name": "unknown.txt",
+            "file_path": "C:\\unknown.txt",
+            "file_size": 1024,
+            "file_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "network_protocol": "tcp",
+            "source_ip": "10.0.0.2",
+            "source_port": 12345,
+            "destination_ip": "8.8.8.8",
+            "destination_port": 443,
+            "status": "success",
+            "outcome": "success",
+            "action": "unknown",
+            "registry_path": "HKLM\\Software\\Unknown",
+            "registry_key": "UnknownKey",
+            "registry_value_name": "UnknownValue",
+            "registry_value_data": "UnknownData",
+            "service_name": "UnknownService",
+            "service_state": "running",
+            "script_block_text": "Write-Host 'Unknown'",
+            "process_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "event_code": 1,
+            "logon_type": 3,
+            "logon_process_name": "User32",
+        }
+
     # ------------------------------------------------------------------ #
     # Public API                                                           #
     # ------------------------------------------------------------------ #
@@ -68,22 +117,26 @@ class TemplateEngine:
         Returns:
             Готовый ECS JSON-документ в виде словаря.
         """
-        ts = timestamp or datetime.now(timezone.utc)
+        merged_context = self.default_context.copy()
+        merged_context.update(context)
+
+        # 1. @timestamp (ECS requirement)
+        if timestamp is None:
+            timestamp = datetime.now(timezone.utc)
+        merged_context["@timestamp"] = timestamp.strftime("%Y-%m-%dT%H:%M:%S.") + f"{timestamp.microsecond // 1000:03d}Z"
+        
+        # 2. Hardcoded ecs.version
+        merged_context.setdefault("ecs_version", "8.11.0")
+
         tpl_file = self._resolve_template_name(template_name)
 
         # Экранируем обратные слеши в Windows-путях, чтобы JSON оставался валидным
-        safe_ctx = self._escape_context(context)
+        safe_ctx = self._escape_context(merged_context)
 
-        # Добавляем стандартные поля в контекст
-        full_ctx = {
-            "@timestamp": ts.strftime("%Y-%m-%dT%H:%M:%S.") + f"{ts.microsecond // 1000:03d}Z",
-            "ecs_version": "8.11.0",
-            **safe_ctx,
-        }
-
+        # 3. Load & render template
         try:
             tpl = self._env.get_template(tpl_file)
-            rendered = tpl.render(**full_ctx)
+            rendered = tpl.render(**safe_ctx)
         except Exception as exc:
             raise TemplateRenderError(
                 f"Failed to render template '{tpl_file}': {exc}"

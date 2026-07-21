@@ -299,7 +299,8 @@ def run_simulation(self: Task, run_id: int) -> dict:
             current=total_steps, total=total_steps,
             artifacts=serialized_artifacts,
             events_sent=events_sent,
-            message=final_msg
+            message=final_msg,
+            error=final_msg if errors else None
         )
 
         exporter.close()
