@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
-import { Activity, BookOpen, Server, LogOut, Play } from 'lucide-react'
+import { Activity, BookOpen, Server, LogOut, Play, BookOpenCheck } from 'lucide-react'
 import { SimulationTracker } from '@/components/SimulationTracker'
 
 export default function Layout() {
@@ -22,6 +22,7 @@ export default function Layout() {
     { name: 'Stands', href: '/stands', icon: Server },
     { name: 'Environments (CMDB)', href: '/environments', icon: Server },
     { name: 'AI Playbook Generator', href: '/ai-prompt', icon: BookOpen },
+    { name: 'Analyst Playbooks', href: '/analyst-playbooks', icon: BookOpen },
   ]
 
   return (
