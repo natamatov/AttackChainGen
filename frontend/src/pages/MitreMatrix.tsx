@@ -89,7 +89,7 @@ export default function MitreMatrix() {
                 {matrix.map((tactic) => {
                   const coveredTactic = tactic.playbooks.length > 0
                   return (
-                    <div key={tactic.name} className="flex flex-col w-52 flex-shrink-0 gap-3">
+                    <div key={tactic.name} className="flex flex-col w-36 flex-shrink-0 gap-3">
                       {/* Tactic Header */}
                       <div className="group relative z-10">
                         <div className={`p-3 rounded-md text-base font-bold text-center border cursor-pointer transition-colors h-20 flex items-center justify-center ${
