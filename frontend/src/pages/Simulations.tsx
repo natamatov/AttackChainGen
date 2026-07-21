@@ -13,19 +13,22 @@ export default function Simulations() {
   const [showRun, setShowRun] = useState(false)
   const [selectedPlaybook, setSelectedPlaybook] = useState('')
   const [selectedStand, setSelectedStand] = useState('')
+  const [mode, setMode] = useState('realtime')
+  const [backdateOffset, setBackdateOffset] = useState('')
 
   const setActiveRunId = useAppStore(state => state.setActiveRunId)
 
   const fetchData = async () => {
     try {
-      const [simsRes, pbRes, stRes] = await Promise.all([
+      setLoading(true)
+      const [simRes, pbRes, standsRes] = await Promise.all([
         api.get('/simulations/'),
         api.get('/playbooks/'),
         api.get('/stands/')
       ])
-      setSimulations(simsRes.data)
+      setSimulations(simRes.data)
       setPlaybooks(pbRes.data)
-      setStands(stRes.data)
+      setStands(standsRes.data)
     } catch (e) {
       console.error(e)
     } finally {
@@ -43,10 +46,15 @@ export default function Simulations() {
       return
     }
     try {
-      const res = await api.post('/simulations/run', {
+      const payload: any = {
         playbook_id: parseInt(selectedPlaybook),
-        stand_id: parseInt(selectedStand)
-      })
+        stand_id: parseInt(selectedStand),
+        mode: mode
+      }
+      if (mode === 'historical' && backdateOffset.trim()) {
+        payload.backdate_offset = backdateOffset.trim()
+      }
+      const res = await api.post('/simulations/run', payload)
       const newSim = res.data
       setActiveRunId(newSim.id)
       setShowRun(false)
@@ -132,6 +140,29 @@ export default function Simulations() {
                   ))}
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Simulation Mode</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={mode}
+                  onChange={e => setMode(e.target.value)}
+                >
+                  <option value="realtime">Realtime (Wait for delays)</option>
+                  <option value="historical">Historical (Instant, shift timestamps)</option>
+                </select>
+              </div>
+              {mode === 'historical' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Backdate Offset (e.g. '2h', '1d')</label>
+                  <input
+                    type="text"
+                    placeholder="2h"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={backdateOffset}
+                    onChange={e => setBackdateOffset(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
             <Button onClick={handleRun} className="mt-4" disabled={!selectedPlaybook || !selectedStand}>Start Run</Button>
           </CardContent>
