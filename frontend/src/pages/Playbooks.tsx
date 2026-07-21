@@ -22,6 +22,7 @@ export default function Playbooks() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [newYamlName, setNewYamlName] = useState('')
   const [yamlContent, setYamlContent] = useState('')
+  const [defaultTemplate, setDefaultTemplate] = useState('')
 
   useEffect(() => {
     fetchPlaybooks()
@@ -127,6 +128,24 @@ export default function Playbooks() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Name</label>
               <Input value={newYamlName} onChange={e => setNewYamlName(e.target.value)} placeholder="e.g. My Custom Playbook" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Default Template Override (Optional)</label>
+              <div className="flex gap-2">
+                <Input 
+                  value={defaultTemplate} 
+                  onChange={e => setDefaultTemplate(e.target.value)} 
+                  placeholder="e.g. win_security_4688" 
+                />
+                <Button variant="secondary" onClick={() => {
+                  if (!defaultTemplate) return;
+                  const updatedYaml = yamlContent.replace(/template:\s*.*/g, `template: "${defaultTemplate}"`);
+                  setYamlContent(updatedYaml);
+                }}>
+                  Apply to YAML
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Type a template name and click Apply to replace all templates in the YAML.</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">YAML Content</label>
