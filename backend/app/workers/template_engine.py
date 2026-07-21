@@ -148,7 +148,7 @@ class TemplateEngine:
             # Если шаблон использует {{ '@timestamp' }}, он срендерится в строку "@timestamp"
             # Заменяем её на реальное значение времени
             if doc.get("@timestamp") == "@timestamp":
-                doc["@timestamp"] = full_ctx["@timestamp"]
+                doc["@timestamp"] = merged_context["@timestamp"]
                 
         except json.JSONDecodeError as exc:
             raise TemplateRenderError(

@@ -24,9 +24,9 @@ export default function Simulations() {
 
   const setActiveRunId = useAppStore(state => state.setActiveRunId)
 
-  const fetchData = async (page = 1) => {
+  const fetchData = async (page = 1, showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading) setLoading(true)
       const skip = (page - 1) * pageSize
       const [simRes, pbRes, standsRes] = await Promise.all([
         api.get(`/simulations/?skip=${skip}&limit=${pageSize}`),
@@ -55,6 +55,13 @@ export default function Simulations() {
 
   useEffect(() => {
     fetchData(currentPage)
+    
+    // Poll every 3 seconds to update progress
+    const interval = setInterval(() => {
+      fetchData(currentPage, false)
+    }, 3000)
+    
+    return () => clearInterval(interval)
   }, [currentPage])
 
   const handleRun = async () => {
@@ -314,34 +321,32 @@ export default function Simulations() {
             </table>
             
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                <div className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalSims)} of {totalSims} entries
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex items-center px-2 text-sm font-medium">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
+            <div className="flex items-center justify-between mt-6 pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {totalSims === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalSims)} of {totalSims} entries
               </div>
-            )}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center px-2 text-sm font-medium">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
