@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
-import { Play, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Play, CheckCircle2, XCircle, Clock, ChevronDown, ChevronRight, Activity } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 
 export default function Simulations() {
-  const [simulations, setSimulations] = useState([])
+  const [simulations, setSimulations] = useState<any[]>([])
+  const [totalSims, setTotalSims] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const pageSize = 20
+
   const [playbooks, setPlaybooks] = useState([])
   const [stands, setStands] = useState([])
   const [loading, setLoading] = useState(true)
@@ -15,18 +20,30 @@ export default function Simulations() {
   const [selectedStand, setSelectedStand] = useState('')
   const [mode, setMode] = useState('realtime')
   const [backdateOffset, setBackdateOffset] = useState('')
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
 
   const setActiveRunId = useAppStore(state => state.setActiveRunId)
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       setLoading(true)
+      const skip = (page - 1) * pageSize
       const [simRes, pbRes, standsRes] = await Promise.all([
-        api.get('/simulations/'),
+        api.get(`/simulations/?skip=${skip}&limit=${pageSize}`),
         api.get('/playbooks/'),
         api.get('/stands/')
       ])
-      setSimulations(simRes.data)
+      
+      if (simRes.data.items) {
+        setSimulations(simRes.data.items)
+        setTotalSims(simRes.data.total)
+        setTotalPages(simRes.data.pages)
+        setCurrentPage(simRes.data.page)
+      } else {
+        // Fallback if backend pagination is not yet returning the new format
+        setSimulations(simRes.data)
+      }
+      
       setPlaybooks(pbRes.data)
       setStands(standsRes.data)
     } catch (e) {
@@ -37,8 +54,8 @@ export default function Simulations() {
   }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData(currentPage)
+  }, [currentPage])
 
   const handleRun = async () => {
     if (!selectedPlaybook || !selectedStand) {
@@ -58,7 +75,7 @@ export default function Simulations() {
       const newSim = res.data
       setActiveRunId(newSim.id)
       setShowRun(false)
-      fetchData()
+      fetchData(1)
     } catch (e) {
       console.error(e)
       alert('Failed to start simulation')
@@ -77,7 +94,7 @@ export default function Simulations() {
   const handleCancel = async (id: number) => {
     try {
       await api.post(`/simulations/${id}/cancel`)
-      fetchData()
+      fetchData(currentPage)
     } catch (e) {
       console.error(e)
       alert("Failed to cancel simulation")
@@ -91,11 +108,15 @@ export default function Simulations() {
         stand_id
       })
       setActiveRunId(res.data.id)
-      fetchData()
+      fetchData(1)
     } catch (e) {
       console.error(e)
       alert("Failed to restart simulation")
     }
+  }
+
+  const toggleRow = (id: number) => {
+    setExpandedRowId(expandedRowId === id ? null : id)
   }
 
   return (
@@ -177,6 +198,7 @@ export default function Simulations() {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="border-b">
+                  <th className="pb-3 w-8"></th>
                   <th className="pb-3 font-medium">ID</th>
                   <th className="pb-3 font-medium">Playbook</th>
                   <th className="pb-3 font-medium">Stand</th>
@@ -187,43 +209,143 @@ export default function Simulations() {
               </thead>
               <tbody>
                 {simulations.map((sim: any) => (
-                  <tr key={sim.id} className="border-b last:border-0">
-                    <td className="py-3">{sim.id}</td>
-                    <td className="py-3">{sim.playbook_name || `ID: ${sim.playbook_id}`}</td>
-                    <td className="py-3">{sim.stand_name || `ID: ${sim.stand_id}`}</td>
-                    <td className="py-3 flex items-center gap-2" title={sim.status === 'FAILED' ? sim.error_message : ''}>
-                      {getStatusIcon(sim.status)} 
-                      <span className={sim.status === 'FAILED' ? 'border-b border-dashed border-red-500 cursor-help' : ''}>
-                        {sim.status}
-                      </span>
-                    </td>
-                    <td className="py-3">{new Date(sim.created_at).toLocaleString()}</td>
-                    <td className="py-3 text-right space-x-2">
-                      {(sim.status === 'PENDING' || sim.status === 'RUNNING') && (
-                        <Button variant="outline" size="sm" onClick={() => handleCancel(sim.id)}>
-                          Stop
-                        </Button>
-                      )}
-                      {sim.playbook_id && sim.stand_id && (
-                        <Button variant="secondary" size="sm" onClick={() => handleRestart(sim.playbook_id, sim.stand_id)}>
-                          Restart
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
+                  <React.Fragment key={sim.id}>
+                    <tr className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => toggleRow(sim.id)}>
+                      <td className="py-3">
+                        {expandedRowId === sim.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </td>
+                      <td className="py-3">{sim.id}</td>
+                      <td className="py-3 font-medium">{sim.playbook_name || `ID: ${sim.playbook_id}`}</td>
+                      <td className="py-3 text-muted-foreground">{sim.stand_name || `ID: ${sim.stand_id}`}</td>
+                      <td className="py-3 flex items-center gap-2">
+                        {getStatusIcon(sim.status)} 
+                        <span className={sim.status === 'FAILED' ? 'text-red-500 font-medium' : ''}>
+                          {sim.status}
+                        </span>
+                      </td>
+                      <td className="py-3">{sim.created_at ? new Date(sim.created_at).toLocaleString() : ''}</td>
+                      <td className="py-3 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+                        {(sim.status === 'PENDING' || sim.status === 'RUNNING') && (
+                          <Button variant="outline" size="sm" onClick={() => handleCancel(sim.id)}>
+                            Stop
+                          </Button>
+                        )}
+                        {sim.playbook_id && sim.stand_id && (
+                          <Button variant="secondary" size="sm" onClick={() => handleRestart(sim.playbook_id, sim.stand_id)}>
+                            Restart
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                    
+                    {/* Collapsible Details Row */}
+                    {expandedRowId === sim.id && (
+                      <tr className="border-b bg-muted/20">
+                        <td colSpan={7} className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-8">
+                            <div className="space-y-4">
+                              <div>
+                                <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
+                                  <Activity className="h-4 w-4 text-blue-500"/>
+                                  Execution Progress
+                                </h4>
+                                <div className="text-sm text-muted-foreground mb-1">
+                                  Step {sim.progress_current || 0} of {sim.progress_total || 0}
+                                </div>
+                                <div className="w-full bg-secondary rounded-full h-2.5">
+                                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (sim.progress_current / (sim.progress_total || 1)) * 100)}%` }}></div>
+                                </div>
+                                <div className="mt-2 text-sm text-muted-foreground">
+                                  {sim.progress_message || "Waiting..."}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-sm font-semibold mb-1">Metrics</h4>
+                                <div className="text-sm text-muted-foreground">
+                                  Events sent to Elastic: <strong className="text-foreground">{sim.events_sent || 0}</strong>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              {sim.status === 'FAILED' && sim.error_message && (
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+                                  <h4 className="text-sm font-semibold text-red-500 mb-1">Failure Reason</h4>
+                                  <pre className="text-xs text-red-400 whitespace-pre-wrap font-mono">
+                                    {sim.error_message}
+                                  </pre>
+                                </div>
+                              )}
+
+                              {sim.artifacts && Object.keys(sim.artifacts).length > 0 && (
+                                <div>
+                                  <h4 className="text-sm font-semibold mb-2">Generated Artifacts (IoCs)</h4>
+                                  <div className="bg-background border rounded-md p-3 max-h-48 overflow-y-auto">
+                                    {Object.entries(sim.artifacts).map(([stepId, arts]: [string, any]) => (
+                                      <div key={stepId} className="mb-3 last:mb-0">
+                                        <div className="text-xs font-semibold text-muted-foreground mb-1">{stepId}</div>
+                                        {Object.entries(arts).map(([k, v]) => (
+                                          <div key={k} className="text-sm flex gap-2">
+                                            <span className="font-mono text-muted-foreground min-w-[80px]">{k}:</span>
+                                            <span className="font-mono text-foreground">{String(v)}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
                 {simulations.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       No simulations run yet.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalSims)} of {totalSims} entries
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center px-2 text-sm font-medium">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
     </div>
   )
 }
+
