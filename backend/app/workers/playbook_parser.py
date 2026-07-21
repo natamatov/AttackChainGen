@@ -53,6 +53,14 @@ class PlaybookStep(BaseModel):
     description: str | None = None
     multiplier: int = Field(default=1, ge=1)
 
+    model_config = {"extra": "allow"}
+
+    @model_validator(mode="after")
+    def _merge_extra(self) -> "PlaybookStep":
+        if self.model_extra:
+            self.fields.update(self.model_extra)
+        return self
+
     @field_validator("delay_from_start", "delay_from_prev", mode="before")
     @classmethod
     def coerce_delay_to_str(cls, v: Any) -> str | None:
