@@ -22,13 +22,14 @@ async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_db)):
     if not env:
         raise HTTPException(status_code=404, detail="Environment not found")
         
-    # Сбор шаблонов
-    templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "templates")
+    # Сбор шаблонов — используем абсолютный путь как в tasks.py
+    from pathlib import Path as _Path
+    templates_dir_path = _Path(__file__).parent.parent.parent.parent / "templates"
+    templates_dir = str(templates_dir_path)
     templates = []
-    if os.path.exists(templates_dir):
-        for f in os.listdir(templates_dir):
-            if f.endswith(".json.j2"):
-                templates.append(f.replace(".json.j2", ""))
+    if templates_dir_path.exists():
+        for f in templates_dir_path.glob("*.json.j2"):
+            templates.append(f.name.replace(".json.j2", ""))
                 
     # Формирование промпта
     prompt = f"""Ты эксперт по Red Teaming и созданию контента для SIEM (Cyber Range / BAS). 
