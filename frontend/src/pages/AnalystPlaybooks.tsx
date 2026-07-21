@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
-  BookOpenCheck, Plus, Trash2, Edit3, Save, X, ChevronDown, ChevronUp,
+  BookOpenCheck, Plus, Trash2, Edit3, ChevronDown, ChevronUp,
   Link2, FileText, ClipboardList, Eye, Code2, AlertCircle
 } from 'lucide-react'
 
@@ -26,30 +29,30 @@ function renderMarkdown(md: string): string {
   let html = md
     // Code blocks
     .replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) =>
-      `<pre class="md-code" data-lang="${lang}"><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`)
+      `<pre class="md-code bg-muted p-2 rounded-md my-2 overflow-x-auto font-mono text-sm" data-lang="${lang}"><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`)
     // Inline code
-    .replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>')
+    .replace(/`([^`]+)`/g, '<code class="md-inline-code bg-muted px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
     // H1-H3
-    .replace(/^### (.+)$/gm, '<h3 class="md-h3">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="md-h2">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="md-h1">$1</h1>')
+    .replace(/^### (.+)$/gm, '<h3 class="md-h3 text-lg font-semibold mt-4 mb-2">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="md-h2 text-xl font-semibold mt-5 mb-3 border-b pb-1">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="md-h1 text-2xl font-bold mt-6 mb-4">$1</h1>')
     // Bold
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // Italic
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     // Checkboxes
-    .replace(/^- \[x\] (.+)$/gm, '<div class="md-check md-checked"><span class="md-checkbox">✓</span>$1</div>')
-    .replace(/^- \[ \] (.+)$/gm, '<div class="md-check"><span class="md-checkbox-empty">○</span>$1</div>')
+    .replace(/^- \[x\] (.+)$/gm, '<div class="md-check flex items-center gap-2 my-1"><span class="md-checkbox text-primary font-bold">☑</span><span>$1</span></div>')
+    .replace(/^- \[ \] (.+)$/gm, '<div class="md-check flex items-center gap-2 my-1"><span class="md-checkbox-empty text-muted-foreground font-bold">☐</span><span>$1</span></div>')
     // Unordered lists
-    .replace(/^- (.+)$/gm, '<li class="md-li">$1</li>')
+    .replace(/^- (.+)$/gm, '<li class="md-li ml-6 list-disc">$1</li>')
     // Ordered lists
-    .replace(/^\d+\. (.+)$/gm, '<li class="md-li md-oli">$1</li>')
+    .replace(/^\d+\. (.+)$/gm, '<li class="md-li md-oli ml-6 list-decimal">$1</li>')
     // Horizontal rule
-    .replace(/^---$/gm, '<hr class="md-hr">')
+    .replace(/^---$/gm, '<hr class="md-hr my-4 border-border">')
     // Paragraphs (blank line separation)
-    .replace(/\n\n/g, '</p><p class="md-p">')
+    .replace(/\n\n/g, '</p><p class="md-p my-2">')
 
-  return `<p class="md-p">${html}</p>`
+  return `<div class="md-container space-y-2 leading-relaxed"><p class="md-p my-2">${html}</p></div>`
 }
 
 // ────────────────────────────────────────────────────────────
@@ -65,22 +68,24 @@ function MarkdownEditor({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-blue-400" />
+        <label className="text-sm font-medium flex items-center gap-2">
+          <FileText className="h-4 w-4" />
           {label}
         </label>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => setPreview(!preview)}
-          className="flex items-center gap-1 text-xs px-3 py-1 rounded-full border border-white/10 text-gray-400 hover:text-white hover:border-blue-500/50 transition-all"
+          className="h-8"
         >
-          {preview ? <><Code2 className="h-3 w-3" /> Редактор</> : <><Eye className="h-3 w-3" /> Превью</>}
-        </button>
+          {preview ? <><Code2 className="h-4 w-4 mr-2" /> Editor</> : <><Eye className="h-4 w-4 mr-2" /> Preview</>}
+        </Button>
       </div>
 
       {preview ? (
         <div
-          className="markdown-body min-h-[220px] p-4 rounded-xl border border-white/10 bg-black/20 overflow-auto"
+          className="min-h-[220px] p-4 rounded-md border bg-muted/50 overflow-auto"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
         />
       ) : (
@@ -89,7 +94,7 @@ function MarkdownEditor({
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
           rows={12}
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-gray-200 font-mono placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y"
+          className="flex min-h-[220px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-mono resize-y"
         />
       )}
     </div>
@@ -108,76 +113,62 @@ function APCard({
   const [tab, setTab] = useState<'guide' | 'checklist'>('guide')
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#0f1117] shadow-xl overflow-hidden">
-      {/* Header */}
-      <div className="flex items-start justify-between px-6 py-5 gap-4">
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-1">
-            <BookOpenCheck className="h-5 w-5 text-blue-400 flex-shrink-0" />
-            <h3 className="text-base font-semibold text-white truncate">{ap.name}</h3>
+          <div className="flex items-center gap-3">
+            <BookOpenCheck className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-lg truncate">{ap.name}</CardTitle>
           </div>
           {ap.description && (
-            <p className="text-sm text-gray-400 ml-8">{ap.description}</p>
+            <CardDescription className="ml-8 mt-1.5">{ap.description}</CardDescription>
           )}
           {ap.playbook_name && (
-            <div className="flex items-center gap-2 ml-8 mt-2">
-              <Link2 className="h-3 w-3 text-purple-400" />
-              <span className="text-xs text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                Сценарий: {ap.playbook_name}
+            <div className="flex items-center gap-2 ml-8 mt-3">
+              <Link2 className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full border">
+                Scenario: {ap.playbook_name}
               </span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={onEdit}
-            className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
-            title="Редактировать"
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-            title="Удалить"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-          >
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
+        <div className="flex items-center space-x-1 flex-shrink-0 ml-4">
+          <Button variant="ghost" size="icon" onClick={onEdit} title="Edit">
+            <Edit3 className="h-4 w-4 text-muted-foreground hover:text-blue-500" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onDelete} title="Delete">
+            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setExpanded(!expanded)}>
+            {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Expanded content */}
       {expanded && (
-        <div className="border-t border-white/10">
-          {/* Tabs */}
-          <div className="flex border-b border-white/10">
+        <div className="border-t">
+          <div className="flex border-b bg-muted/20">
             <button
               onClick={() => setTab('guide')}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all border-b-2 ${
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
                 tab === 'guide'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
             >
               <FileText className="h-4 w-4" />
-              Руководство аналитика
+              Analyst Guide
             </button>
             <button
               onClick={() => setTab('checklist')}
-              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all border-b-2 ${
+              className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
                 tab === 'checklist'
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-300'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
             >
               <ClipboardList className="h-4 w-4" />
-              Чеклист расследования
+              Investigation Checklist
             </button>
           </div>
 
@@ -185,170 +176,32 @@ function APCard({
             {tab === 'guide' ? (
               ap.analyst_guide ? (
                 <div
-                  className="markdown-body"
+                  className="text-sm text-foreground"
                   dangerouslySetInnerHTML={{ __html: renderMarkdown(ap.analyst_guide) }}
                 />
               ) : (
-                <div className="flex items-center gap-2 text-gray-500 text-sm py-8 justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
                   <AlertCircle className="h-4 w-4" />
-                  Руководство аналитика не заполнено
+                  No analyst guide provided.
                 </div>
               )
             ) : (
               ap.investigation_checklist ? (
                 <div
-                  className="markdown-body"
+                  className="text-sm text-foreground"
                   dangerouslySetInnerHTML={{ __html: renderMarkdown(ap.investigation_checklist) }}
                 />
               ) : (
-                <div className="flex items-center gap-2 text-gray-500 text-sm py-8 justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm py-8 justify-center">
                   <AlertCircle className="h-4 w-4" />
-                  Чеклист расследования не заполнен
+                  No investigation checklist provided.
                 </div>
               )
             )}
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-// ────────────────────────────────────────────────────────────
-// Modal for Create / Edit
-// ────────────────────────────────────────────────────────────
-function APModal({
-  initial, playbooks, onSave, onClose
-}: {
-  initial?: AnalystPlaybook | null
-  playbooks: Playbook[]
-  onSave: (data: Partial<AnalystPlaybook>) => Promise<void>
-  onClose: () => void
-}) {
-  const [name, setName] = useState(initial?.name ?? '')
-  const [description, setDescription] = useState(initial?.description ?? '')
-  const [playbookId, setPlaybookId] = useState<number | ''>(initial?.playbook_id ?? '')
-  const [guide, setGuide] = useState(initial?.analyst_guide ?? '')
-  const [checklist, setChecklist] = useState(initial?.investigation_checklist ?? '')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSave = async () => {
-    if (!name.trim()) { setError('Название обязательно'); return }
-    setSaving(true)
-    try {
-      await onSave({
-        name: name.trim(),
-        description: description || null,
-        playbook_id: playbookId !== '' ? Number(playbookId) : null,
-        analyst_guide: guide || null,
-        investigation_checklist: checklist || null,
-      })
-      onClose()
-    } catch (e: any) {
-      setError(e.message ?? 'Ошибка сохранения')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0d1117] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <BookOpenCheck className="h-6 w-6 text-blue-400" />
-            <h2 className="text-lg font-semibold text-white">
-              {initial ? 'Редактировать аналитический плейбук' : 'Создать аналитический плейбук'}
-            </h2>
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="p-8 flex flex-col gap-6">
-          {/* Basic info */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Название *</label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                placeholder="Руководство по расследованию: Brute Force on AD"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">Описание</label>
-              <input
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                placeholder="Краткое описание..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                <Link2 className="inline h-4 w-4 text-purple-400 mr-1" />
-                Сценарий атаки (необязательно)
-              </label>
-              <select
-                value={playbookId}
-                onChange={e => setPlaybookId(e.target.value === '' ? '' : Number(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              >
-                <option value="">— Не привязан —</option>
-                {playbooks.map(pb => (
-                  <option key={pb.id} value={pb.id}>{pb.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Analyst guide */}
-          <MarkdownEditor
-            label="Руководство аналитика (Markdown)"
-            value={guide}
-            onChange={setGuide}
-            placeholder={`# Руководство аналитика: Brute Force\n\n## 1. Обнаружение\n\n**KQL в Kibana:**\n\`\`\`kql\nevent.code: "4625" AND source.ip: "192.168.100.20"\n\`\`\`\n\n## 2. Подтверждение\n...`}
-          />
-
-          {/* Checklist */}
-          <MarkdownEditor
-            label="Чеклист расследования (Markdown)"
-            value={checklist}
-            onChange={setChecklist}
-            placeholder={`# Чеклист: Brute Force\n\n## Артефакты к сбору\n- [ ] IP-адрес атакующего\n- [ ] Скомпрометированный пользователь\n- [ ] Время начала атаки\n- [ ] Число попыток\n\n## Выполненные проверки\n- [ ] Поиск событий 4625\n- [ ] Поиск событий 4624 от того же IP`}
-          />
-
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
-              <AlertCircle className="h-4 w-4" /> {error}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-white/10 text-sm text-gray-400 hover:text-white hover:border-white/20 transition-all"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-sm font-medium text-white transition-all"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? 'Сохранение...' : 'Сохранить'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Card>
   )
 }
 
@@ -359,8 +212,16 @@ export default function AnalystPlaybooks() {
   const [items, setItems] = useState<AnalystPlaybook[]>([])
   const [playbooks, setPlaybooks] = useState<Playbook[]>([])
   const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<AnalystPlaybook | null>(null)
+  const [showImport, setShowImport] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [playbookId, setPlaybookId] = useState<number | ''>('')
+  const [guide, setGuide] = useState('')
+  const [checklist, setChecklist] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -378,106 +239,177 @@ export default function AnalystPlaybooks() {
 
   useEffect(() => { load() }, [])
 
-  const handleCreate = async (data: Partial<AnalystPlaybook>) => {
-    await api.post('/analyst-playbooks/', data)
-    await load()
+  const handleEdit = (ap: AnalystPlaybook) => {
+    setEditingId(ap.id)
+    setName(ap.name)
+    setDescription(ap.description || '')
+    setPlaybookId(ap.playbook_id ?? '')
+    setGuide(ap.analyst_guide || '')
+    setChecklist(ap.investigation_checklist || '')
+    setShowImport(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleUpdate = async (id: number, data: Partial<AnalystPlaybook>) => {
-    await api.patch(`/analyst-playbooks/${id}`, data)
-    await load()
+  const handleCreateNew = () => {
+    setEditingId(null)
+    setName('')
+    setDescription('')
+    setPlaybookId('')
+    setGuide('')
+    setChecklist('')
+    setShowImport(!showImport)
+  }
+
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Name is required'); return }
+    setSaving(true)
+    setError('')
+    try {
+      const data = {
+        name: name.trim(),
+        description: description || null,
+        playbook_id: playbookId !== '' ? Number(playbookId) : null,
+        analyst_guide: guide || null,
+        investigation_checklist: checklist || null,
+      }
+      if (editingId) {
+        await api.patch(`/analyst-playbooks/${editingId}`, data)
+      } else {
+        await api.post('/analyst-playbooks/', data)
+      }
+      setShowImport(false)
+      await load()
+    } catch (e: any) {
+      setError(e.message ?? 'Failed to save analyst playbook')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Удалить аналитический плейбук?')) return
+    if (!confirm('Delete this analyst playbook?')) return
     await api.delete(`/analyst-playbooks/${id}`)
     await load()
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <BookOpenCheck className="h-7 w-7 text-blue-400" />
-            Аналитические плейбуки
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Руководства для SOC-аналитиков и чеклисты расследований
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight">Analyst Playbooks</h2>
+          <p className="text-muted-foreground">SOC investigation guides and checklists.</p>
         </div>
-        <button
-          onClick={() => { setEditing(null); setModalOpen(true) }}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-all shadow-lg shadow-blue-500/20"
-        >
-          <Plus className="h-4 w-4" />
-          Создать плейбук
-        </button>
+        <div className="flex space-x-2">
+          <Button onClick={handleCreateNew} variant="default">
+            {showImport && !editingId ? 'Cancel' : <><Plus className="mr-2 h-4 w-4" /> Create Playbook</>}
+          </Button>
+        </div>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4">
+      {showImport && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{editingId ? 'Edit Analyst Playbook' : 'Create Analyst Playbook'}</CardTitle>
+            <CardDescription>Define investigation steps, KQL queries, and requirements.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-sm font-medium">Name *</label>
+                <Input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Investigation Guide: Brute Force"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description</label>
+                <Input
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Short description..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Linked Attack Scenario (Optional)</label>
+                <select
+                  value={playbookId}
+                  onChange={e => setPlaybookId(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">— Unlinked —</option>
+                  {playbooks.map(pb => (
+                    <option key={pb.id} value={pb.id}>{pb.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <MarkdownEditor
+              label="Analyst Guide (Markdown)"
+              value={guide}
+              onChange={setGuide}
+              placeholder={`# Analyst Guide: Brute Force\n\n## 1. Detection\n\n**KQL in Kibana:**\n\`\`\`kql\nevent.code: "4625"\n\`\`\``}
+            />
+
+            <MarkdownEditor
+              label="Investigation Checklist (Markdown)"
+              value={checklist}
+              onChange={setChecklist}
+              placeholder={`# Checklist: Brute Force\n\n## Artifacts\n- [ ] Attacker IP\n- [ ] Compromised User`}
+            />
+
+            {error && (
+              <div className="flex items-center gap-2 text-red-500 text-sm bg-destructive/10 border border-destructive/20 rounded-md px-4 py-3">
+                <AlertCircle className="h-4 w-4" /> {error}
+              </div>
+            )}
+
+            <div className="flex space-x-2 pt-2">
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create Playbook'}
+              </Button>
+              {editingId && (
+                <Button variant="outline" onClick={() => setShowImport(false)}>Cancel</Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[
-          { label: 'Всего плейбуков', value: items.length, icon: BookOpenCheck, color: 'blue' },
-          { label: 'С руководством', value: items.filter(i => i.analyst_guide).length, icon: FileText, color: 'purple' },
-          { label: 'С чеклистом', value: items.filter(i => i.investigation_checklist).length, icon: ClipboardList, color: 'emerald' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="rounded-2xl border border-white/10 bg-[#0f1117] p-5 flex items-center gap-4">
-            <div className={`rounded-xl p-3 bg-${color}-500/10`}>
-              <Icon className={`h-5 w-5 text-${color}-400`} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-white">{value}</div>
-              <div className="text-xs text-gray-500">{label}</div>
-            </div>
-          </div>
+          { label: 'Total Playbooks', value: items.length, icon: BookOpenCheck },
+          { label: 'With Guides', value: items.filter(i => i.analyst_guide).length, icon: FileText },
+          { label: 'With Checklists', value: items.filter(i => i.investigation_checklist).length, icon: ClipboardList },
+        ].map(({ label, value, icon: Icon }, idx) => (
+          <Card key={idx}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{label}</CardTitle>
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{value}</div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3" />
-          Загрузка...
-        </div>
+        <div className="text-sm text-muted-foreground">Loading...</div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-          <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-6">
-            <BookOpenCheck className="h-12 w-12 text-blue-400 mx-auto" />
-          </div>
-          <h3 className="text-lg font-semibold text-white">Нет аналитических плейбуков</h3>
-          <p className="text-sm text-gray-500 max-w-sm">
-            Создайте первое руководство для аналитика SOC с шагами расследования и KQL-запросами
-          </p>
-          <button
-            onClick={() => { setEditing(null); setModalOpen(true) }}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-all"
-          >
-            <Plus className="h-4 w-4" /> Создать первый плейбук
-          </button>
-        </div>
+        <div className="text-sm text-muted-foreground">No analyst playbooks found. Create one!</div>
       ) : (
         <div className="flex flex-col gap-4">
           {items.map(ap => (
             <APCard
               key={ap.id}
               ap={ap}
-              onEdit={() => { setEditing(ap); setModalOpen(true) }}
+              onEdit={() => handleEdit(ap)}
               onDelete={() => handleDelete(ap.id)}
             />
           ))}
         </div>
-      )}
-
-      {/* Modal */}
-      {modalOpen && (
-        <APModal
-          initial={editing}
-          playbooks={playbooks}
-          onSave={data => editing ? handleUpdate(editing.id, data) : handleCreate(data)}
-          onClose={() => { setModalOpen(false); setEditing(null) }}
-        />
       )}
     </div>
   )
