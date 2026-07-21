@@ -123,12 +123,24 @@ class PlaybookParser:
     @staticmethod
     def from_yaml(yaml_text: str) -> Playbook:
         """Разобрать Playbook из YAML-строки."""
+        yaml_text = yaml_text.strip()
+        if yaml_text.startswith("```yaml"):
+            yaml_text = yaml_text[7:]
+        elif yaml_text.startswith("```"):
+            yaml_text = yaml_text[3:]
+        if yaml_text.endswith("```"):
+            yaml_text = yaml_text[:-3]
+            
         data = yaml.safe_load(yaml_text)
+        if not isinstance(data, dict):
+            raise ValueError("YAML must be a dictionary")
         return PlaybookParser.from_dict(data)
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> Playbook:
         """Разобрать Playbook из словаря."""
+        if "playbook" in data and isinstance(data["playbook"], dict):
+            data = data["playbook"]
         return Playbook.model_validate(data)
 
     @staticmethod
