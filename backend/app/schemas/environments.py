@@ -9,8 +9,10 @@ class AssetBase(BaseModel):
     ip_address: str = Field(..., description="IP-адрес, например 192.168.100.10")
     role: str | None = Field(default=None, description="Роль или описание")
 
-class AssetCreate(AssetBase):
-    pass
+class AssetCreate(BaseModel):
+    hostname: str = Field(..., description="Имя хоста, например SRV-DC01")
+    ip_address: str | None = Field(default=None, description="IP-адрес. Если не указан, сгенерируется автоматически.")
+    role: str | None = Field(default=None, description="Роль или описание")
 
 class AssetUpdate(BaseModel):
     hostname: str | None = None

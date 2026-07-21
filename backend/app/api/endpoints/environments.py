@@ -117,15 +117,48 @@ async def delete_zone(zone_id: int, db: AsyncSession = Depends(get_db)):
 # Assets
 # ─────────────────────────────────────────────────────────────────────── #
 
+import ipaddress
+
 @router.post("/zones/{zone_id}/assets", response_model=AssetOut, status_code=status.HTTP_201_CREATED)
 async def create_asset(
     zone_id: int,
     asset_in: AssetCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    zone = await db.get(NetworkZone, zone_id)
+    zone = await db.get(NetworkZone, zone_id, options=[selectinload(NetworkZone.assets)])
     if not zone:
         raise HTTPException(status_code=404, detail="Zone not found")
+        
+    if not asset_in.ip_address:
+        if "-" in zone.ip_range:
+            try:
+                start_ip_str, end_ip_str = [x.strip() for x in zone.ip_range.split("-")]
+                start_ip = ipaddress.IPv4Address(start_ip_str)
+                end_ip = ipaddress.IPv4Address(end_ip_str)
+                
+                existing_ips = set()
+                for a in zone.assets:
+                    try:
+                        existing_ips.add(ipaddress.IPv4Address(a.ip_address))
+                    except:
+                        pass
+                        
+                current_ip = start_ip
+                assigned_ip = None
+                while current_ip <= end_ip:
+                    if current_ip not in existing_ips:
+                        assigned_ip = str(current_ip)
+                        break
+                    current_ip = ipaddress.IPv4Address(int(current_ip) + 1)
+                    
+                if not assigned_ip:
+                    raise HTTPException(status_code=400, detail="No available IP addresses in the given range")
+                asset_in.ip_address = assigned_ip
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to auto-generate IP: {e}")
+        else:
+            raise HTTPException(status_code=400, detail="Zone does not have a valid IP range format (e.g., 10.0.0.10-10.0.0.20)")
+
     asset = Asset(**asset_in.model_dump(), zone_id=zone_id)
     db.add(asset)
     await db.commit()

@@ -80,12 +80,16 @@ export default function Environments() {
   }
 
   const createAsset = async (zoneId: number) => {
-    if (!newAsset.hostname || !newAsset.ip_address) {
-      window.alert("Please fill in both Hostname and IP Address for the asset.")
+    if (!newAsset.hostname) {
+      window.alert("Please fill in Hostname for the asset.")
       return
     }
     try {
-      const res = await api.post(`/environments/zones/${zoneId}/assets`, { hostname: newAsset.hostname, ip_address: newAsset.ip_address, role: newAsset.role })
+      const payload: any = { hostname: newAsset.hostname, role: newAsset.role }
+      if (newAsset.ip_address) {
+        payload.ip_address = newAsset.ip_address
+      }
+      const res = await api.post(`/environments/zones/${zoneId}/assets`, payload)
       if (res.status === 201 || res.status === 200) {
         setNewAsset({ zoneId: 0, hostname: '', ip_address: '', role: '' })
         fetchEnvironments()
@@ -161,7 +165,7 @@ export default function Environments() {
                   <CardContent className="p-0">
                     <div className="p-3 bg-muted/10 border-b flex gap-2">
                       <Input className="h-7 text-xs" placeholder="SRV-01" value={newAsset.zoneId === zone.id ? newAsset.hostname : ''} onChange={e => setNewAsset({...newAsset, zoneId: zone.id, hostname: e.target.value})} />
-                      <Input className="h-7 text-xs" placeholder="192.168.1.10" value={newAsset.zoneId === zone.id ? newAsset.ip_address : ''} onChange={e => setNewAsset({...newAsset, zoneId: zone.id, ip_address: e.target.value})} />
+                      <Input className="h-7 text-xs" placeholder="Авто (опционально)" value={newAsset.zoneId === zone.id ? newAsset.ip_address : ''} onChange={e => setNewAsset({...newAsset, zoneId: zone.id, ip_address: e.target.value})} />
                       <Button size="sm" className="h-7 px-2" onClick={() => createAsset(zone.id)}><Plus className="w-3 h-3"/></Button>
                     </div>
                     <ul className="divide-y divide-border">
