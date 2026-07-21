@@ -10,6 +10,7 @@ import Simulations from '@/pages/Simulations'
 import Environments from '@/pages/Environments'
 import AIPrompt from '@/pages/AIPrompt'
 import AnalystPlaybooks from '@/pages/AnalystPlaybooks'
+import MitreMatrix from '@/pages/MitreMatrix'
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="environments" element={<Environments />} />
           <Route path="ai-prompt" element={<AIPrompt />} />
           <Route path="analyst-playbooks" element={<AnalystPlaybooks />} />
+          <Route path="mitre" element={<MitreMatrix />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
