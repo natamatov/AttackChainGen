@@ -191,8 +191,11 @@ export default function Simulations() {
                     <td className="py-3">{sim.id}</td>
                     <td className="py-3">{sim.playbook_name || `ID: ${sim.playbook_id}`}</td>
                     <td className="py-3">{sim.stand_name || `ID: ${sim.stand_id}`}</td>
-                    <td className="py-3 flex items-center gap-2">
-                      {getStatusIcon(sim.status)} {sim.status}
+                    <td className="py-3 flex items-center gap-2" title={sim.status === 'FAILED' ? sim.error_message : ''}>
+                      {getStatusIcon(sim.status)} 
+                      <span className={sim.status === 'FAILED' ? 'border-b border-dashed border-red-500 cursor-help' : ''}>
+                        {sim.status}
+                      </span>
                     </td>
                     <td className="py-3">{new Date(sim.created_at).toLocaleString()}</td>
                     <td className="py-3 text-right space-x-2">
