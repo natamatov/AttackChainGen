@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.base import get_session
+from app.db.base import get_db
 from app.db.models import FictionalEnvironment, NetworkZone, Asset
 from app.schemas.environments import (
     FictionalEnvironmentCreate,
@@ -24,7 +24,7 @@ router = APIRouter()
 # ─────────────────────────────────────────────────────────────────────── #
 
 @router.get("/", response_model=list[FictionalEnvironmentOut])
-async def list_environments(db: AsyncSession = Depends(get_session)):
+async def list_environments(db: AsyncSession = Depends(get_db)):
     stmt = select(FictionalEnvironment).options(
         selectinload(FictionalEnvironment.zones).selectinload(NetworkZone.assets)
     )
@@ -35,7 +35,7 @@ async def list_environments(db: AsyncSession = Depends(get_session)):
 @router.post("/", response_model=FictionalEnvironmentOut, status_code=status.HTTP_201_CREATED)
 async def create_environment(
     env_in: FictionalEnvironmentCreate,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_db)
 ):
     env = FictionalEnvironment(**env_in.model_dump())
     db.add(env)
@@ -50,7 +50,7 @@ async def create_environment(
 
 
 @router.get("/{env_id}", response_model=FictionalEnvironmentOut)
-async def get_environment(env_id: int, db: AsyncSession = Depends(get_session)):
+async def get_environment(env_id: int, db: AsyncSession = Depends(get_db)):
     stmt = select(FictionalEnvironment).options(
         selectinload(FictionalEnvironment.zones).selectinload(NetworkZone.assets)
     ).where(FictionalEnvironment.id == env_id)
@@ -65,7 +65,7 @@ async def get_environment(env_id: int, db: AsyncSession = Depends(get_session)):
 async def update_environment(
     env_id: int,
     env_in: FictionalEnvironmentUpdate,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_db)
 ):
     env = await get_environment(env_id, db)
     update_data = env_in.model_dump(exclude_unset=True)
@@ -76,7 +76,7 @@ async def update_environment(
 
 
 @router.delete("/{env_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_environment(env_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_environment(env_id: int, db: AsyncSession = Depends(get_db)):
     env = await db.get(FictionalEnvironment, env_id)
     if not env:
         raise HTTPException(status_code=404, detail="Environment not found")
@@ -92,7 +92,7 @@ async def delete_environment(env_id: int, db: AsyncSession = Depends(get_session
 async def create_zone(
     env_id: int,
     zone_in: NetworkZoneCreate,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_db)
 ):
     env = await db.get(FictionalEnvironment, env_id)
     if not env:
@@ -104,7 +104,7 @@ async def create_zone(
     return zone
 
 @router.delete("/zones/{zone_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_zone(zone_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_zone(zone_id: int, db: AsyncSession = Depends(get_db)):
     zone = await db.get(NetworkZone, zone_id)
     if not zone:
         raise HTTPException(status_code=404, detail="Zone not found")
@@ -119,7 +119,7 @@ async def delete_zone(zone_id: int, db: AsyncSession = Depends(get_session)):
 async def create_asset(
     zone_id: int,
     asset_in: AssetCreate,
-    db: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_db)
 ):
     zone = await db.get(NetworkZone, zone_id)
     if not zone:
@@ -131,7 +131,7 @@ async def create_asset(
     return asset
 
 @router.delete("/assets/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_asset(asset_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_asset(asset_id: int, db: AsyncSession = Depends(get_db)):
     asset = await db.get(Asset, asset_id)
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")

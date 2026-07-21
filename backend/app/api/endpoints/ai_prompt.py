@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.base import get_session
+from app.db.base import get_db
 from app.db.models import FictionalEnvironment, NetworkZone
 import os
 from app.core.config import get_settings
@@ -12,7 +12,7 @@ router = APIRouter()
 settings = get_settings()
 
 @router.get("/{env_id}")
-async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_session)):
+async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_db)):
     stmt = select(FictionalEnvironment).options(
         selectinload(FictionalEnvironment.zones).selectinload(NetworkZone.assets)
     ).where(FictionalEnvironment.id == env_id)
