@@ -24,7 +24,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.db.models import NoiseLevel, SimulationMode, SimulationRun, SimulationStatus, Stand, Playbook
+from app.db.models import NoiseLevel, SimulationMode, SimulationRun, SimulationStatus, Stand, Playbook, Asset, NetworkZone, FictionalEnvironment
 from app.workers.celery_app import celery_app
 from app.workers.context_manager import ContextManager
 from app.workers.elastic_exporter import ElasticExporter
@@ -183,7 +183,26 @@ def run_simulation(self: Task, run_id: int) -> dict:
         if run.overrides:
             global_ctx.update(run.overrides)
 
-        ctx_manager = ContextManager(global_context=global_ctx)
+        # ── 4а. Загрузить реальные активы из FictionalEnvironment ────────
+        # Берём все активы из всех окружений и передаём в ContextManager,
+        # чтобы генерация хостов/IP использовала реальные данные инфраструктуры
+        all_assets = db.query(Asset).all()
+        real_hostnames = [a.hostname for a in all_assets if a.hostname]
+        real_ips = [a.ip_address for a in all_assets if a.ip_address]
+        
+        # Также собираем IP-диапазоны зон для генерации IP
+        all_zones = db.query(NetworkZone).all()
+        zone_ranges = [z.ip_range for z in all_zones if z.ip_range]
+        
+        if real_hostnames:
+            logger.info("Loaded %d real assets from infrastructure: %s...",
+                       len(real_hostnames), real_hostnames[:3])
+        
+        ctx_manager = ContextManager(
+            global_context=global_ctx,
+            real_hostnames=real_hostnames or None,
+            real_ips=real_ips or None,
+        )
         tpl_engine = TemplateEngine(templates_dir=TEMPLATES_DIR)
         drift_engine = TimeDriftEngine(
             mode=DriftMode(run.mode.value),

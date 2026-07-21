@@ -54,10 +54,15 @@ class ContextManager:
         fake_locale: str = "en_US",
         internal_networks: list[str] | None = None,
         corp_domains: list[str] | None = None,
+        real_hostnames: list[str] | None = None,
+        real_ips: list[str] | None = None,
     ) -> None:
         self._fake = Faker(fake_locale)
         self._internal_networks = internal_networks or INTERNAL_NETWORKS
         self._corp_domains = corp_domains or CORP_DOMAINS
+        # Реальные активы из FictionalEnvironment (если заданы)
+        self._real_hostnames: list[str] = real_hostnames or []
+        self._real_ips: list[str] = real_ips or []
 
         # Глобальные переменные инцидента (host, user и т.д.)
         self._global: dict[str, Any] = {}
@@ -165,6 +170,9 @@ class ContextManager:
     # ------------------------------------------------------------------ #
 
     def gen_internal_ip(self) -> str:
+        # Если есть реальные IP из инфраструктуры — используем их
+        if self._real_ips:
+            return random.choice(self._real_ips)
         tpl = random.choice(self._internal_networks)
         return tpl.format(
             random.randint(1, 254),
@@ -178,6 +186,9 @@ class ContextManager:
             return ip
 
     def gen_hostname(self) -> str:
+        # Если есть реальные хосты из инфраструктуры — используем их
+        if self._real_hostnames:
+            return random.choice(self._real_hostnames)
         prefix = random.choice(HOST_PREFIXES)
         suffix = random.randint(1, 99)
         dept = random.choice(["HR", "IT", "FIN", "DEV", "MGMT", "SALES"])
