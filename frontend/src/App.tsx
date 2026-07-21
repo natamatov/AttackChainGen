@@ -9,6 +9,7 @@ import Stands from '@/pages/Stands'
 import Simulations from '@/pages/Simulations'
 import Environments from '@/pages/Environments'
 import AIPrompt from '@/pages/AIPrompt'
+import AnalystPlaybooks from '@/pages/AnalystPlaybooks'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="simulations" element={<Simulations />} />
           <Route path="environments" element={<Environments />} />
           <Route path="ai-prompt" element={<AIPrompt />} />
+          <Route path="analyst-playbooks" element={<AnalystPlaybooks />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

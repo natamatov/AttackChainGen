@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import api from '@/lib/api'
+import { useState, useEffect } from 'react'
+import { api } from '@/lib/api'
 import {
   BookOpenCheck, Plus, Trash2, Edit3, Save, X, ChevronDown, ChevronUp,
-  Link2, FileText, ClipboardList, Eye, Code2, AlertCircle, CheckSquare
+  Link2, FileText, ClipboardList, Eye, Code2, AlertCircle
 } from 'lucide-react'
 
 interface Playbook { id: number; name: string }
