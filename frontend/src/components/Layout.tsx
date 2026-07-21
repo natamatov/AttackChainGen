@@ -20,6 +20,8 @@ export default function Layout() {
     { name: 'Playbooks', href: '/playbooks', icon: BookOpen },
     { name: 'Simulations', href: '/simulations', icon: Play },
     { name: 'Stands', href: '/stands', icon: Server },
+    { name: 'Environments (CMDB)', href: '/environments', icon: Server },
+    { name: 'AI Playbook Generator', href: '/ai-prompt', icon: BookOpen },
   ]
 
   return (
