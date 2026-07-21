@@ -120,13 +120,24 @@ class TemplateEngine:
     # Private                                                              #
     # ------------------------------------------------------------------ #
 
+    TEMPLATE_ALIASES = {
+        "process_creation_template": "win_security_4688",
+        "network_connection_template": "sysmon_event_3",
+        "smb_access_template": "win_security_4624",
+        "remote_execution_template": "win_security_4688",
+        "file_creation_template": "sysmon_event_11",
+        "authentication_template": "win_security_4624",
+    }
+
     @staticmethod
     def _resolve_template_name(name: str) -> str:
-        if name.endswith(".json.j2"):
-            return name
-        if name.endswith(".j2"):
-            return name
-        return f"{name}.json.j2"
+        # Убираем расширение, если оно есть, для проверки алиасов
+        base_name = name.replace(".json.j2", "").replace(".j2", "")
+        # Если ИИ выдумал имя, подменяем на реальный шаблон
+        if base_name in TemplateEngine.TEMPLATE_ALIASES:
+            base_name = TemplateEngine.TEMPLATE_ALIASES[base_name]
+            
+        return f"{base_name}.json.j2"
 
     @staticmethod
     def _escape_context(ctx: dict) -> dict:
