@@ -221,6 +221,7 @@ def run_simulation(self: Task, run_id: int) -> dict:
         # ── 7. Главный цикл выполнения ────────────────────────────────
         events_sent = 0
         errors: list[str] = []
+        batch = []
 
         for step_idx, (step, ts) in enumerate(drift_engine.step_iterator(steps), start=1):
             # Проверка отмены (через Redis флаг)
@@ -240,26 +241,44 @@ def run_simulation(self: Task, run_id: int) -> dict:
             except Exception:
                 pass
 
-            _update_run_status(
-                db, run, SimulationStatus.RUNNING,
-                current=step_idx - 1, total=total_steps,
-                events_sent=events_sent,
-                message=f"Executing step {step_idx}/{total_steps}: {step.id}"
-            )
+            if step_idx % 20 == 0 or step_idx == total_steps:
+                _update_run_status(
+                    db, run, SimulationStatus.RUNNING,
+                    current=step_idx, total=total_steps,
+                    events_sent=events_sent + len(batch),
+                    message=f"Executing step {step_idx}/{total_steps}: {step.id}"
+                )
 
             try:
                 resolved = ctx_manager.resolve_fields(step.fields, step.id, step.depends_on)
                 full_ctx = ctx_manager.build_step_context(step.id, resolved, step.depends_on)
                 doc = tpl_engine.render(step.template, full_ctx, timestamp=ts)
-                exporter.send_event(doc)
-                events_sent += 1
-                logger.info("Step %s: event sent (ts=%s)", step.id, ts.isoformat())
+                
+                if run.mode.value == "historical":
+                    batch.append(doc)
+                    if len(batch) >= 100:
+                        exporter.send_bulk(batch)
+                        events_sent += len(batch)
+                        batch.clear()
+                else:
+                    exporter.send_event(doc)
+                    events_sent += 1
+                
+                logger.info("Step %s: event processed (ts=%s)", step.id, ts.isoformat())
             except Exception as exc:
                 error_msg = f"Step {step.id} failed: {exc}"
                 errors.append(error_msg)
                 logger.error(error_msg)
 
         # ── 8. Завершение ─────────────────────────────────────────────
+        if batch:
+            try:
+                exporter.send_bulk(batch)
+                events_sent += len(batch)
+                batch.clear()
+            except Exception as exc:
+                errors.append(f"Final batch failed: {exc}")
+
         if noise_gen:
             noise_gen.stop()
 
