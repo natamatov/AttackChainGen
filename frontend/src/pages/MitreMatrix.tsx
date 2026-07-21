@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { ShieldAlert } from 'lucide-react'
+import mitreData from '@/lib/mitre_data.json'
 
 interface Playbook {
   id: number
@@ -10,20 +11,15 @@ interface Playbook {
   mitre_techniques: string[]
 }
 
-const MITRE_MATRIX = [
-  { name: 'Initial Access', techniques: ['T1189', 'T1190', 'T1133', 'T1566', 'T1566.001', 'T1078'] },
-  { name: 'Execution', techniques: ['T1059', 'T1059.003', 'T1203', 'T1053', 'T1047', 'T1204', 'T1204.002'] },
-  { name: 'Persistence', techniques: ['T1098', 'T1136', 'T1543', 'T1546', 'T1505', 'T1505.003', 'T1053.005'] },
-  { name: 'Privilege Escalation', techniques: ['T1548', 'T1134', 'T1078', 'T1053', 'T1068'] },
-  { name: 'Defense Evasion', techniques: ['T1140', 'T1070', 'T1218', 'T1218.010', 'T1562', 'T1490', 'T1027'] },
-  { name: 'Credential Access', techniques: ['T1110', 'T1003', 'T1003.006', 'T1558', 'T1558.003', 'T1056'] },
-  { name: 'Discovery', techniques: ['T1087', 'T1016', 'T1049', 'T1033', 'T1082', 'T1018'] },
-  { name: 'Lateral Movement', techniques: ['T1210', 'T1534', 'T1550', 'T1550.002', 'T1021', 'T1078.002', 'T1091'] },
-  { name: 'Collection', techniques: ['T1560', 'T1560.001', 'T1123', 'T1114', 'T1056'] },
-  { name: 'Command and Control', techniques: ['T1071', 'T1071.001', 'T1090', 'T1105', 'T1573', 'T1104'] },
-  { name: 'Exfiltration', techniques: ['T1020', 'T1030', 'T1048', 'T1048.003', 'T1052'] },
-  { name: 'Impact', techniques: ['T1485', 'T1486', 'T1490', 'T1491', 'T1529'] }
-]
+interface MitreTechnique {
+  id: string
+  name: string
+}
+
+interface MitreTactic {
+  name: string
+  techniques: MitreTechnique[]
+}
 
 export default function MitreMatrix() {
   const [playbooks, setPlaybooks] = useState<Playbook[]>([])
@@ -38,30 +34,32 @@ export default function MitreMatrix() {
 
   // Helper to get playbooks covering a specific tactic
   const getPlaybooksForTactic = (tacticName: string) => {
-    return playbooks.filter(pb => pb.mitre_tactics.some(t => t.toLowerCase() === tacticName.toLowerCase()))
+    return playbooks.filter(pb => 
+      pb.mitre_tactics.some(t => t.toLowerCase().replace(/[^a-z0-9]/g, '') === tacticName.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    )
   }
 
   // Helper to get playbooks covering a specific technique
   const getPlaybooksForTechnique = (techniqueId: string) => {
-    return playbooks.filter(pb => pb.mitre_techniques.some(t => t.toLowerCase() === techniqueId.toLowerCase()))
-  }
-
-  // Inject any dynamic techniques that we have in playbooks but aren't hardcoded in our UI list
-  const matrix = MITRE_MATRIX.map(tactic => {
-    const tacticPlaybooks = getPlaybooksForTactic(tactic.name)
-    const expandedTechniques = [...tactic.techniques]
-    
-    tacticPlaybooks.forEach(pb => {
-      pb.mitre_techniques.forEach(tech => {
-        if (!expandedTechniques.includes(tech)) {
-          expandedTechniques.push(tech)
-        }
+    return playbooks.filter(pb => {
+      // Split sub-techniques to match main technique as well, e.g. T1566.001 should match T1566
+      return pb.mitre_techniques.some(t => {
+        const pbTech = t.toUpperCase().trim()
+        const targetTech = techniqueId.toUpperCase().trim()
+        return pbTech === targetTech || pbTech.startsWith(`${targetTech}.`)
       })
     })
+  }
+
+  const matrix = (mitreData as MitreTactic[]).map(tactic => {
+    const tacticPlaybooks = getPlaybooksForTactic(tactic.name)
+    
+    // Create a deep copy of techniques
+    const techniques = tactic.techniques.map(t => ({ ...t }))
 
     return {
       ...tactic,
-      techniques: Array.from(new Set(expandedTechniques)),
+      techniques,
       playbooks: tacticPlaybooks
     }
   })
@@ -71,7 +69,7 @@ export default function MitreMatrix() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">MITRE ATT&CK Matrix</h2>
-          <p className="text-muted-foreground">Interactive killchain mapping across all your playbooks.</p>
+          <p className="text-muted-foreground">Full Enterprise Killchain mapping across all your playbooks.</p>
         </div>
       </div>
 
@@ -91,22 +89,22 @@ export default function MitreMatrix() {
                 {matrix.map((tactic) => {
                   const coveredTactic = tactic.playbooks.length > 0
                   return (
-                    <div key={tactic.name} className="flex flex-col w-48 flex-shrink-0 gap-2">
+                    <div key={tactic.name} className="flex flex-col w-52 flex-shrink-0 gap-2">
                       {/* Tactic Header */}
-                      <div className="group relative">
-                        <div className={`p-3 rounded-md text-sm font-bold text-center border cursor-pointer transition-colors ${
+                      <div className="group relative z-10">
+                        <div className={`p-3 rounded-md text-sm font-bold text-center border cursor-pointer transition-colors h-16 flex items-center justify-center ${
                           coveredTactic 
                             ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90' 
-                            : 'bg-muted/30 text-muted-foreground border-border'
+                            : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50'
                         }`}>
                           {tactic.name}
                         </div>
                         {coveredTactic && (
-                          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-56 bg-popover text-popover-foreground border shadow-lg rounded-md p-3 text-xs pointer-events-none">
+                          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-64 bg-popover text-popover-foreground border shadow-xl rounded-md p-3 text-xs pointer-events-none">
                             <strong className="block mb-1 border-b pb-1">Covered by {tactic.playbooks.length} playbooks:</strong>
-                            <ul className="list-disc pl-4 space-y-1">
+                            <ul className="list-disc pl-4 space-y-1 mt-2">
                               {tactic.playbooks.map(pb => (
-                                <li key={pb.id} className="truncate">{pb.name}</li>
+                                <li key={pb.id} className="truncate font-medium">{pb.name}</li>
                               ))}
                             </ul>
                           </div>
@@ -114,25 +112,27 @@ export default function MitreMatrix() {
                       </div>
 
                       {/* Techniques List */}
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-1.5 mt-2">
                         {tactic.techniques.map(tech => {
-                          const techPlaybooks = getPlaybooksForTechnique(tech)
+                          const techPlaybooks = getPlaybooksForTechnique(tech.id)
                           const coveredTech = techPlaybooks.length > 0
                           return (
-                            <div key={tech} className="group relative">
-                              <div className={`px-2 py-1.5 rounded text-xs border text-center cursor-pointer transition-colors ${
+                            <div key={tech.id} className="group relative">
+                              <div className={`px-2 py-2 rounded text-[11px] border leading-tight cursor-pointer transition-colors h-12 flex flex-col justify-center ${
                                 coveredTech
-                                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 hover:bg-blue-500/20 font-medium'
+                                  ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20 font-semibold shadow-sm'
                                   : 'bg-transparent text-muted-foreground border-transparent hover:bg-muted/50'
                               }`}>
-                                {tech}
+                                <span>{tech.id}</span>
+                                <span className={coveredTech ? '' : 'opacity-70'}>{tech.name}</span>
                               </div>
                               {coveredTech && (
-                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block z-50 w-56 bg-popover text-popover-foreground border shadow-lg rounded-md p-3 text-xs pointer-events-none">
-                                  <strong className="block mb-1 border-b pb-1">Technique {tech} covered by:</strong>
-                                  <ul className="list-disc pl-4 space-y-1">
+                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block z-50 w-64 bg-popover text-popover-foreground border shadow-xl rounded-md p-3 text-xs pointer-events-none">
+                                  <strong className="block mb-1 border-b pb-1">Technique {tech.id}: {tech.name}</strong>
+                                  <div className="mt-2 font-medium">Covered by:</div>
+                                  <ul className="list-disc pl-4 space-y-1 mt-1">
                                     {techPlaybooks.map(pb => (
-                                      <li key={pb.id} className="truncate">{pb.name}</li>
+                                      <li key={pb.id} className="truncate text-blue-600 dark:text-blue-400">{pb.name}</li>
                                     ))}
                                   </ul>
                                 </div>
