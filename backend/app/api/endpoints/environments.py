@@ -130,44 +130,45 @@ async def create_asset(
         raise HTTPException(status_code=404, detail="Zone not found")
         
     if not asset_in.ip_address:
-        if "-" in zone.ip_range or "/" in zone.ip_range:
-            try:
-                if "-" in zone.ip_range:
-                    start_ip_str, end_ip_str = [x.strip() for x in zone.ip_range.split("-")]
-                    start_ip = ipaddress.IPv4Address(start_ip_str)
-                    end_ip = ipaddress.IPv4Address(end_ip_str)
-                else:
-                    network = ipaddress.IPv4Network(zone.ip_range.strip(), strict=False)
-                    hosts = list(network.hosts())
-                    if not hosts:
-                        raise HTTPException(status_code=400, detail="CIDR network has no usable hosts")
-                    start_ip = hosts[0]
-                    end_ip = hosts[-1]
-                
-                existing_ips = set()
-                for a in zone.assets:
-                    try:
-                        existing_ips.add(ipaddress.IPv4Address(a.ip_address))
-                    except:
-                        pass
-                        
-                current_ip = start_ip
-                assigned_ip = None
-                while current_ip <= end_ip:
-                    if current_ip not in existing_ips:
-                        assigned_ip = str(current_ip)
-                        break
-                    current_ip = ipaddress.IPv4Address(int(current_ip) + 1)
+        try:
+            if "-" in zone.ip_range:
+                start_ip_str, end_ip_str = [x.strip() for x in zone.ip_range.split("-")]
+                start_ip = ipaddress.IPv4Address(start_ip_str)
+                end_ip = ipaddress.IPv4Address(end_ip_str)
+            elif "/" in zone.ip_range:
+                network = ipaddress.IPv4Network(zone.ip_range.strip(), strict=False)
+                hosts = list(network.hosts())
+                if not hosts:
+                    raise HTTPException(status_code=400, detail="CIDR network has no usable hosts")
+                start_ip = hosts[0]
+                end_ip = hosts[-1]
+            else:
+                single_ip = ipaddress.IPv4Address(zone.ip_range.strip())
+                start_ip = single_ip
+                end_ip = single_ip
+            
+            existing_ips = set()
+            for a in zone.assets:
+                try:
+                    existing_ips.add(ipaddress.IPv4Address(a.ip_address))
+                except:
+                    pass
                     
-                if not assigned_ip:
-                    raise HTTPException(status_code=400, detail="No available IP addresses in the given range")
-                asset_in.ip_address = assigned_ip
-            except HTTPException:
-                raise
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Failed to auto-generate IP: {e}")
-        else:
-            raise HTTPException(status_code=400, detail="Zone does not have a valid IP range format (e.g., 10.0.0.10-10.0.0.20 or 10.0.0.0/24)")
+            current_ip = start_ip
+            assigned_ip = None
+            while current_ip <= end_ip:
+                if current_ip not in existing_ips:
+                    assigned_ip = str(current_ip)
+                    break
+                current_ip = ipaddress.IPv4Address(int(current_ip) + 1)
+                
+            if not assigned_ip:
+                raise HTTPException(status_code=400, detail="No available IP addresses in the given range")
+            asset_in.ip_address = assigned_ip
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid IP range format (e.g., 10.0.0.10-10.0.0.20, 10.0.0.0/24, or a single IP): {e}")
 
     asset = Asset(**asset_in.model_dump(), zone_id=zone_id)
     db.add(asset)
