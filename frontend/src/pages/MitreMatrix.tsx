@@ -89,10 +89,10 @@ export default function MitreMatrix() {
                 {matrix.map((tactic) => {
                   const coveredTactic = tactic.playbooks.length > 0
                   return (
-                    <div key={tactic.name} className="flex flex-col w-52 flex-shrink-0 gap-2">
+                    <div key={tactic.name} className="flex flex-col w-72 flex-shrink-0 gap-3">
                       {/* Tactic Header */}
                       <div className="group relative z-10">
-                        <div className={`p-3 rounded-md text-sm font-bold text-center border cursor-pointer transition-colors h-16 flex items-center justify-center ${
+                        <div className={`p-4 rounded-md text-lg font-bold text-center border cursor-pointer transition-colors h-24 flex items-center justify-center ${
                           coveredTactic 
                             ? 'bg-primary text-primary-foreground border-primary shadow-sm hover:bg-primary/90' 
                             : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50'
@@ -112,13 +112,13 @@ export default function MitreMatrix() {
                       </div>
 
                       {/* Techniques List */}
-                      <div className="flex flex-col gap-1.5 mt-2">
+                      <div className="flex flex-col gap-2 mt-3">
                         {tactic.techniques.map(tech => {
                           const techPlaybooks = getPlaybooksForTechnique(tech.id)
                           const coveredTech = techPlaybooks.length > 0
                           return (
                             <div key={tech.id} className="group relative">
-                              <div className={`px-2 py-2 rounded text-[11px] border leading-tight cursor-pointer transition-colors h-12 flex flex-col justify-center ${
+                              <div className={`px-3 py-3 rounded text-sm border leading-snug cursor-pointer transition-colors h-16 flex flex-col justify-center ${
                                 coveredTech
                                   ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20 font-semibold shadow-sm'
                                   : 'bg-transparent text-muted-foreground border-transparent hover:bg-muted/50'
