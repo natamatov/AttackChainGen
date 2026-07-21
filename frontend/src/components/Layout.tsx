@@ -22,7 +22,7 @@ export default function Layout() {
     { name: 'Stands', href: '/stands', icon: Server },
     { name: 'Environments (CMDB)', href: '/environments', icon: Server },
     { name: 'AI Playbook Generator', href: '/ai-prompt', icon: BookOpen },
-    { name: 'Analyst Playbooks', href: '/analyst-playbooks', icon: BookOpen },
+    { name: 'Analyst Playbooks', href: '/analyst-playbooks', icon: BookOpenCheck },
   ]
 
   return (
