@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Copy, Sparkles } from 'lucide-react'
+import { api } from '@/lib/api'
 
 interface Environment {
   id: number
@@ -21,9 +22,8 @@ export default function AIPrompt() {
 
   const fetchEnvironments = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/environments')
-      const data = await res.json()
-      setEnvironments(data)
+      const res = await api.get('/environments/')
+      setEnvironments(res.data)
     } catch (err) {
       console.error(err)
     }
@@ -33,15 +33,14 @@ export default function AIPrompt() {
     if (!selectedEnvId) return
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:8000/api/ai-prompt/${selectedEnvId}`)
-      const data = await res.json()
-      if (data.prompt) {
-        setPrompt(data.prompt)
+      const res = await api.get(`/ai-prompt/${selectedEnvId}`)
+      if (res.data.prompt) {
+        setPrompt(res.data.prompt)
       } else {
-        window.alert(data.detail || 'Failed to generate prompt')
+        window.alert(res.data.detail || 'Failed to generate prompt')
       }
-    } catch (err) {
-      window.alert('Server error')
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail || 'Server error')
     } finally {
       setLoading(false)
     }

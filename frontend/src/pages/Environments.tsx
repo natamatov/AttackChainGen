@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2, Server, Globe, Network } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { api } from '@/lib/api'
 
 interface Asset {
   id: number
@@ -42,9 +43,8 @@ export default function Environments() {
 
   const fetchEnvironments = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/environments')
-      const data = await res.json()
-      setEnvironments(data)
+      const res = await api.get('/environments/')
+      setEnvironments(res.data)
     } catch (err) {
       window.alert('Failed to fetch environments')
     }
@@ -53,12 +53,8 @@ export default function Environments() {
   const createEnvironment = async () => {
     if (!newEnv.name || !newEnv.domain) return
     try {
-      const res = await fetch('http://localhost:8000/api/environments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEnv)
-      })
-      if (res.ok) {
+      const res = await api.post('/environments/', newEnv)
+      if (res.status === 201 || res.status === 200) {
         setNewEnv({ name: '', domain: '', description: '' })
         fetchEnvironments()
       }
@@ -70,12 +66,8 @@ export default function Environments() {
   const createZone = async () => {
     if (!newZone.envId || !newZone.name || !newZone.cidr) return
     try {
-      const res = await fetch(`http://localhost:8000/api/environments/${newZone.envId}/zones`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newZone.name, cidr: newZone.cidr })
-      })
-      if (res.ok) {
+      const res = await api.post(`/environments/${newZone.envId}/zones`, { name: newZone.name, cidr: newZone.cidr })
+      if (res.status === 201 || res.status === 200) {
         setNewZone({ envId: 0, name: '', cidr: '' })
         fetchEnvironments()
       }
@@ -87,12 +79,8 @@ export default function Environments() {
   const createAsset = async () => {
     if (!newAsset.zoneId || !newAsset.hostname || !newAsset.ip_address) return
     try {
-      const res = await fetch(`http://localhost:8000/api/environments/zones/${newAsset.zoneId}/assets`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hostname: newAsset.hostname, ip_address: newAsset.ip_address, role: newAsset.role })
-      })
-      if (res.ok) {
+      const res = await api.post(`/environments/zones/${newAsset.zoneId}/assets`, { hostname: newAsset.hostname, ip_address: newAsset.ip_address, role: newAsset.role })
+      if (res.status === 201 || res.status === 200) {
         setNewAsset({ zoneId: 0, hostname: '', ip_address: '', role: '' })
         fetchEnvironments()
       }
@@ -102,17 +90,17 @@ export default function Environments() {
   }
 
   const deleteEnvironment = async (id: number) => {
-    await fetch(`http://localhost:8000/api/environments/${id}`, { method: 'DELETE' })
+    await api.delete(`/environments/${id}`)
     fetchEnvironments()
   }
 
   const deleteZone = async (id: number) => {
-    await fetch(`http://localhost:8000/api/environments/zones/${id}`, { method: 'DELETE' })
+    await api.delete(`/environments/zones/${id}`)
     fetchEnvironments()
   }
 
   const deleteAsset = async (id: number) => {
-    await fetch(`http://localhost:8000/api/environments/assets/${id}`, { method: 'DELETE' })
+    await api.delete(`/environments/assets/${id}`)
     fetchEnvironments()
   }
 
