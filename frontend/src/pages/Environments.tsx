@@ -63,29 +63,35 @@ export default function Environments() {
     }
   }
 
-  const createZone = async () => {
-    if (!newZone.envId || !newZone.name || !newZone.cidr) return
+  const createZone = async (envId: number) => {
+    if (!newZone.name || !newZone.cidr) {
+      window.alert("Please fill in both Name and CIDR for the zone.")
+      return
+    }
     try {
-      const res = await api.post(`/environments/${newZone.envId}/zones`, { name: newZone.name, cidr: newZone.cidr })
+      const res = await api.post(`/environments/${envId}/zones`, { name: newZone.name, cidr: newZone.cidr })
       if (res.status === 201 || res.status === 200) {
         setNewZone({ envId: 0, name: '', cidr: '' })
         fetchEnvironments()
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail || 'Failed to create zone')
     }
   }
 
-  const createAsset = async () => {
-    if (!newAsset.zoneId || !newAsset.hostname || !newAsset.ip_address) return
+  const createAsset = async (zoneId: number) => {
+    if (!newAsset.hostname || !newAsset.ip_address) {
+      window.alert("Please fill in both Hostname and IP Address for the asset.")
+      return
+    }
     try {
-      const res = await api.post(`/environments/zones/${newAsset.zoneId}/assets`, { hostname: newAsset.hostname, ip_address: newAsset.ip_address, role: newAsset.role })
+      const res = await api.post(`/environments/zones/${zoneId}/assets`, { hostname: newAsset.hostname, ip_address: newAsset.ip_address, role: newAsset.role })
       if (res.status === 201 || res.status === 200) {
         setNewAsset({ zoneId: 0, hostname: '', ip_address: '', role: '' })
         fetchEnvironments()
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      window.alert(err.response?.data?.detail || 'Failed to create asset')
     }
   }
 
@@ -137,7 +143,7 @@ export default function Environments() {
             <div className="flex gap-4 items-end bg-muted/20 p-4 rounded-md border border-dashed">
               <div className="space-y-1"><label className="text-xs">Имя подсети (Zone)</label><Input placeholder="Servers" value={newZone.envId === env.id ? newZone.name : ''} onChange={e => setNewZone({...newZone, envId: env.id, name: e.target.value})} /></div>
               <div className="space-y-1"><label className="text-xs">CIDR</label><Input placeholder="192.168.100.0/24" value={newZone.envId === env.id ? newZone.cidr : ''} onChange={e => setNewZone({...newZone, envId: env.id, cidr: e.target.value})} /></div>
-              <Button size="sm" variant="secondary" onClick={createZone}><Plus className="w-4 h-4 mr-2"/> Добавить зону</Button>
+              <Button size="sm" variant="secondary" onClick={() => createZone(env.id)}><Plus className="w-4 h-4 mr-2"/> Добавить зону</Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -156,7 +162,7 @@ export default function Environments() {
                     <div className="p-3 bg-muted/10 border-b flex gap-2">
                       <Input className="h-7 text-xs" placeholder="SRV-01" value={newAsset.zoneId === zone.id ? newAsset.hostname : ''} onChange={e => setNewAsset({...newAsset, zoneId: zone.id, hostname: e.target.value})} />
                       <Input className="h-7 text-xs" placeholder="192.168.1.10" value={newAsset.zoneId === zone.id ? newAsset.ip_address : ''} onChange={e => setNewAsset({...newAsset, zoneId: zone.id, ip_address: e.target.value})} />
-                      <Button size="sm" className="h-7 px-2" onClick={createAsset}><Plus className="w-3 h-3"/></Button>
+                      <Button size="sm" className="h-7 px-2" onClick={() => createAsset(zone.id)}><Plus className="w-3 h-3"/></Button>
                     </div>
                     <ul className="divide-y divide-border">
                       {zone.assets.map(asset => (
