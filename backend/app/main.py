@@ -62,6 +62,7 @@ async def global_exception_handler(request, exc):
 
 # Подключаем роутеры
 from app.api.endpoints import environments, ai_prompt
+from app.api import analyst_playbooks
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -71,6 +72,8 @@ app.include_router(simulations.router)
 app.include_router(websockets.router)
 app.include_router(environments.router, prefix="/api/environments", tags=["environments"])
 app.include_router(ai_prompt.router, prefix="/api/ai-prompt", tags=["ai_prompt"])
+app.include_router(analyst_playbooks.router)
+
 
 
 @app.get("/api/health")

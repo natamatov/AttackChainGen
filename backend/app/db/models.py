@@ -287,5 +287,44 @@ class Asset(Base):
     # Relationships
     zone: Mapped["NetworkZone"] = relationship(back_populates="assets")
 
+
+# ─────────────────────────────────────────────────────────────────────── #
+# Analyst Playbook                                                         #
+# ─────────────────────────────────────────────────────────────────────── #
+
+class AnalystPlaybook(Base):
+    """Аналитический плейбук — руководство для SOC-аналитика по расследованию атаки."""
+    __tablename__ = "analyst_playbooks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+
+    # Привязка к сценарию атаки (опционально)
+    playbook_id: Mapped[int | None] = mapped_column(
+        ForeignKey("playbooks.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Руководство аналитика (Markdown): что искать, KQL-запросы, шаги расследования
+    analyst_guide: Mapped[str | None] = mapped_column(Text)
+
+    # Чеклист расследования (Markdown): что аналитик должен найти и сдать
+    investigation_checklist: Mapped[str | None] = mapped_column(Text)
+
+    created_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    playbook: Mapped["Playbook | None"] = relationship(foreign_keys=[playbook_id])
+    created_by_user: Mapped["User | None"] = relationship(foreign_keys=[created_by])
+
     def __repr__(self) -> str:
-        return f"<Asset id={self.id} hostname={self.hostname} ip={self.ip_address}>"
+        return f"<AnalystPlaybook id={self.id} name={self.name}>"
+

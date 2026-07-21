@@ -149,6 +149,16 @@ class TemplateEngine:
             # Заменяем её на реальное значение времени
             if doc.get("@timestamp") == "@timestamp":
                 doc["@timestamp"] = merged_context["@timestamp"]
+            
+            # Добавляем обязательные теги
+            tags = doc.get("tags", [])
+            if isinstance(tags, list):
+                if "attackchain" not in tags:
+                    tags.append("attackchain")
+                if "attack-simulation" not in tags:
+                    tags.append("attack-simulation")
+                doc["tags"] = tags
+
                 
         except json.JSONDecodeError as exc:
             raise TemplateRenderError(
