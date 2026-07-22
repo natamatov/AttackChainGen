@@ -45,6 +45,9 @@ class AnalystPlaybookSummary(BaseModel):
     description: str | None
     playbook_id: int | None
     playbook_name: str | None = None
+    analyst_guide: str | None = None
+    investigation_checklist: str | None = None
     created_at: datetime
+    updated_at: datetime
 
     model_config = {"from_attributes": True}
