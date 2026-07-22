@@ -100,7 +100,7 @@ export default function MitreMatrix() {
                           {tactic.name}
                         </div>
                         {coveredTactic && (
-                          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-64 bg-popover text-popover-foreground border shadow-xl rounded-md p-3 text-xs pointer-events-none">
+                          <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:block z-50 w-64 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-md p-3 text-xs pointer-events-none">
                             <strong className="block mb-1 border-b pb-1">Covered by {tactic.playbooks.length} playbooks:</strong>
                             <ul className="list-disc pl-4 space-y-1 mt-2">
                               {tactic.playbooks.map(pb => (
@@ -127,7 +127,7 @@ export default function MitreMatrix() {
                                 <span className={coveredTech ? '' : 'opacity-70'}>{tech.name}</span>
                               </div>
                               {coveredTech && (
-                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block z-50 w-64 bg-popover text-popover-foreground border shadow-xl rounded-md p-3 text-xs pointer-events-none">
+                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 hidden group-hover:block z-50 w-64 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-md p-3 text-xs pointer-events-none">
                                   <strong className="block mb-1 border-b pb-1">Technique {tech.id}: {tech.name}</strong>
                                   <div className="mt-2 font-medium">Covered by:</div>
                                   <ul className="list-disc pl-4 space-y-1 mt-1">

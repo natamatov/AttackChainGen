@@ -400,7 +400,7 @@ export default function AnalystPlaybooks() {
       ) : items.length === 0 ? (
         <div className="text-sm text-muted-foreground">No analyst playbooks found. Create one!</div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {items.map(ap => (
             <APCard
               key={ap.id}
