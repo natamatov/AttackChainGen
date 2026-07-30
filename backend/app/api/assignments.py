@@ -6,7 +6,7 @@ from typing import List
 
 from app.db.base import get_db
 from app.db.models import User, StudentAssignment, SimulationRun, AssignmentStatus, UserRole
-from app.api.deps import get_current_user
+from app.core.dependencies import get_current_user
 from app.schemas.assignment import AssignmentCreate, AssignmentResponse, AssignmentSubmit
 
 router = APIRouter(prefix="/assignments", tags=["Assignments"])
