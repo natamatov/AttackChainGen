@@ -181,9 +181,12 @@ class ContextManager:
 
     def gen_external_ip(self) -> str:
         # Избегаем внутренних и зарезервированных диапазонов
-        while True:
-            ip = self._fake.ipv4_public()
-            return ip
+        import ipaddress
+        for _ in range(100):
+            ip_str = self._fake.ipv4_public()
+            if not ipaddress.IPv4Address(ip_str).is_private:
+                return ip_str
+        return "8.8.8.8"
 
     def gen_hostname(self) -> str:
         # Если есть реальные хосты из инфраструктуры — используем их

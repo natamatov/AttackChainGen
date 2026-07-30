@@ -62,9 +62,12 @@ class SimulationRunSummary(BaseModel):
     status: SimulationStatus
     mode: SimulationMode
     noise_level: NoiseLevel
+    backdate_offset: str | None = None
     progress_current: int
     progress_total: int
     events_sent: int
+    error_message: str | None = None
+    artifacts: dict | None = None
     created_by: int | None
     started_at: datetime | None
     completed_at: datetime | None

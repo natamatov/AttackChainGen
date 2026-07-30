@@ -1,0 +1,33 @@
+name: "WMI Remote Execution"
+description: "Атакующий с захваченной рабочей станции PC1 использует WMI (Windows Management Instrumentation) для удаленного выполнения вредоносного кода на PC2, минуя стандартные командные интерпретаторы."
+global_context:
+  host.domain: "corp.local.uz"
+
+steps:
+  - id: "step_1_wmi_conn"
+    template: "network_connection"
+    description: "Установка WMI-соединения по RPC (порт 135) между PC1 и PC2."
+    mitre_tactic: "Execution"
+    mitre_technique: "T1047"
+    delay_from_prev: "0s"
+    fields:
+      source_ip: "192.168.100.20"
+      destination_ip: "192.168.100.21"
+      destination_port: 135
+      protocol: "TCP"
+      action: "allowed"
+
+  - id: "step_2_wmi_exec"
+    template: "win_security_4688"
+    description: "Процесс WmiPrvSE.exe запускает вредоносный бинарник на PC2."
+    mitre_tactic: "Execution"
+    mitre_technique: "T1047"
+    delay_from_prev: "2s"
+    depends_on: "step_1_wmi_conn"
+    fields:
+      host_name: "PC2"
+      host_ip: "192.168.100.21"
+      user_name: "NT AUTHORITY\SYSTEM"
+      process_name: "malware.exe"
+      process_command_line: "malware.exe -silent"
+      parent_path: "WmiPrvSE.exe"

@@ -1,0 +1,58 @@
+name: "Phishing & Lateral Movement to FS01"
+description: "Симуляция атаки: злоумышленник получает первоначальный доступ через фишинговое вложение на ПК бухгалтера, проводит разведку сети и осуществляет боковое перемещение на файловый сервер FS01."
+mitre_tactics:
+  - "Initial Access"
+  - "Discovery"
+  - "Lateral Movement"
+mitre_techniques:
+  - "T1566.001"
+  - "T1046"
+  - "T1021.002"
+global_context:
+  host.name: "PC-Accountant"
+  host.domain: "corp.local.uz"
+  user.name: "accountant"
+steps:
+  - id: "step_1_initial_access"
+    template: "win_security_4688"
+    description: "Пользователь открывает вредоносное вложение Invoice.pdf.exe из фишингового письма, запускается подозрительный процесс."
+    delay_from_prev: "0s"
+    fields:
+      host_name: "PC-Accountant"
+      host_ip: "192.168.100.23"
+      user_name: "accountant"
+      user_domain: "corp.local.uz"
+      process_name: "C:\\Users\\accountant\\Downloads\\Invoice.pdf.exe"
+      parent_path: "C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"
+      process_command_line: "Invoice.pdf.exe -silent"
+      mitre_technique: "T1566.001"
+
+  - id: "step_2_network_recon"
+    template: "sysmon_event_3"
+    description: "Вредоносный процесс Invoice.pdf.exe сканирует сеть в поисках файлового сервера (порты 445)."
+    delay_from_prev: "2m"
+    depends_on: "step_1_initial_access"
+    fields:
+      host_name: "PC-Accountant"
+      host_ip: "192.168.100.23"
+      user_name: "accountant"
+      process_name: "C:\\Users\\accountant\\Downloads\\Invoice.pdf.exe"
+      source_ip: "192.168.100.23"
+      destination_ip: "192.168.100.1"
+      destination_port: 445
+      protocol: "tcp"
+      mitre_technique: "T1046"
+
+  - id: "step_3_lateral_movement"
+    template: "win_security_4624"
+    description: "Злоумышленник похитил хеш/пароль и успешно аутентифицируется по сети (Logon Type 3) на файловом сервере FS01."
+    delay_from_prev: "5m"
+    depends_on: "step_2_network_recon"
+    fields:
+      host_name: "FS01"
+      host_ip: "192.168.100.1"
+      user_name: "accountant"
+      user_domain: "corp.local.uz"
+      source_ip: "192.168.100.23"
+      logon_type: 3
+      mitre_technique: "T1021.002"

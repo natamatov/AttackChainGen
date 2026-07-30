@@ -14,7 +14,11 @@ class PlaybookCreate(BaseModel):
     mitre_tactics: list[str] = Field(default_factory=list)
     mitre_techniques: list[str] = Field(default_factory=list)
     yaml_content: str
+    analyst_guide: str | None = None
+    os_type: str = "Windows"
     is_public: bool = True
+    status: str = "draft"
+    stix_references: dict | None = None
 
 
 class PlaybookUpdate(BaseModel):
@@ -23,7 +27,11 @@ class PlaybookUpdate(BaseModel):
     mitre_tactics: list[str] | None = None
     mitre_techniques: list[str] | None = None
     yaml_content: str | None = None
+    analyst_guide: str | None = None
+    os_type: str | None = None
     is_public: bool | None = None
+    status: str | None = None
+    stix_references: dict | None = None
 
 
 class PlaybookOut(BaseModel):
@@ -33,7 +41,11 @@ class PlaybookOut(BaseModel):
     mitre_tactics: list[str]
     mitre_techniques: list[str]
     yaml_content: str
+    analyst_guide: str | None
+    os_type: str
     is_public: bool
+    status: str
+    stix_references: dict | None
     created_by: int | None
     created_at: datetime
     updated_at: datetime
@@ -48,7 +60,10 @@ class PlaybookSummary(BaseModel):
     description: str | None
     mitre_tactics: list[str]
     mitre_techniques: list[str]
+    analyst_guide: str | None
+    os_type: str
     is_public: bool
+    status: str
     created_by: int | None
     created_at: datetime
 

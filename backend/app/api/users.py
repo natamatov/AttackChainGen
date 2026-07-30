@@ -8,12 +8,20 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db, require_admin
+from app.core.dependencies import get_db, require_admin, get_current_active_user
 from app.core.security import get_password_hash
-from app.db.models import User
+from app.db.models import User, UserRole
 from app.schemas.user import UserCreate, UserOut, UserPasswordReset, UserUpdate
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+@router.get("/students", response_model=list[UserOut])
+async def list_students(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+) -> list[User]:
+    result = await db.execute(select(User).where(User.role == UserRole.STUDENT))
+    return list(result.scalars().all())
 
 
 @router.get("/", response_model=list[UserOut])

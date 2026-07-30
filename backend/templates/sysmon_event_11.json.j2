@@ -40,8 +40,8 @@
     "entity_id": "{{ process_guid | default(log_id) }}"
   },
   "file": {
-    "path": {{ file_path | tojson }},
-    "name": {{ file_name | default(file_path.split('\\')[-1]) | tojson }},
+    "path": {{ file_path | default('C:\\Windows\\Temp\\unknown.tmp') | tojson }},
+    "name": {{ file_name | default((file_path | default('C:\\Windows\\Temp\\unknown.tmp')).split('\\')[-1]) | tojson }},
     "directory": {{ file_directory | default('') | tojson }},
     "extension": "{{ file_extension | default('') }}",
     "hash": {
@@ -60,8 +60,8 @@
       "UtcTime": "{{ '@timestamp' }}",
       "ProcessGuid": "{{ process_guid | default(log_id) }}",
       "ProcessId": "{{ process_pid }}",
-      "Image": {{ process_path | default(process_name) | tojson }},
-      "TargetFilename": {{ file_path | tojson }},
+      "Image": {{ process_path | default(process_name | default('unknown.exe')) | tojson }},
+      "TargetFilename": {{ file_path | default('C:\\Windows\\Temp\\unknown.tmp') | tojson }},
       "CreationUtcTime": "{{ '@timestamp' }}"
     }
   },

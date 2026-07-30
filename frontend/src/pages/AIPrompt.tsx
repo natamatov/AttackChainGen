@@ -47,8 +47,24 @@ export default function AIPrompt() {
   }
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(prompt)
-    window.alert('Prompt copied to clipboard.')
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(prompt)
+      window.alert('Prompt copied to clipboard.')
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = prompt;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        window.alert('Prompt copied to clipboard.')
+      } catch (err) {
+        console.error('Unable to copy', err);
+        window.alert('Failed to copy prompt.')
+      }
+      document.body.removeChild(textArea);
+    }
   }
 
   return (

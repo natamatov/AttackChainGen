@@ -8,16 +8,22 @@ class AssetBase(BaseModel):
     hostname: str = Field(..., description="Имя хоста, например SRV-DC01")
     ip_address: str = Field(..., description="IP-адрес, например 192.168.100.10")
     role: str | None = Field(default=None, description="Роль или описание")
+    device_type: str | None = Field(default=None, description="Опционально. Теперь тип задается на уровне зоны.")
+    os_name: str | None = Field(default="Windows", description="Операционная система (Windows, Linux, Cisco IOS, etc.)")
 
 class AssetCreate(BaseModel):
     hostname: str = Field(..., description="Имя хоста, например SRV-DC01")
     ip_address: str | None = Field(default=None, description="IP-адрес. Если не указан, сгенерируется автоматически.")
     role: str | None = Field(default=None, description="Роль или описание")
+    device_type: str | None = None
+    os_name: str | None = Field(default="Windows", description="Операционная система")
 
 class AssetUpdate(BaseModel):
     hostname: str | None = None
     ip_address: str | None = None
     role: str | None = None
+    device_type: str | None = None
+    os_name: str | None = None
 
 class AssetOut(AssetBase):
     id: int
@@ -33,6 +39,7 @@ class NetworkZoneBase(BaseModel):
     name: str = Field(..., description="Название зоны, например Servers")
     ip_range: str = Field(..., description="Диапазон IP, например 192.168.100.10-192.168.100.20")
     description: str | None = None
+    zone_type: str | None = Field(default="Workstation", description="Тип оборудования в зоне (ПК, Сервер, Коммутатор, Принтер)")
 
 class NetworkZoneCreate(NetworkZoneBase):
     pass
@@ -41,6 +48,7 @@ class NetworkZoneUpdate(BaseModel):
     name: str | None = None
     ip_range: str | None = None
     description: str | None = None
+    zone_type: str | None = None
 
 class NetworkZoneOut(NetworkZoneBase):
     id: int

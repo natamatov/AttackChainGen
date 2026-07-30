@@ -1,0 +1,71 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["iam"],
+    "type": ["group", "change"],
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "code": "4732",
+    "dataset": "windows.security",
+    "module": "windows",
+    "outcome": "success",
+    "action": "added-member-to-group"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip | default('10.0.0.1') }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows Server 2019",
+      "version": "10.0.17763"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}",
+    "target": {
+      "name": "{{ target_user_name | default('Administrators') }}",
+      "domain": "Builtin"
+    }
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Security-Auditing",
+    "event_id": 4732,
+    "channel": "Security",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(100000, 999999) | random) }},
+    "keywords": ["Audit Success"],
+    "task": "Security Group Management",
+    "opcode": "Info",
+    "event_data": {
+      "MemberName": "{{ member_name | default('-') }}",
+      "MemberSid": "S-1-5-21-{{ range(10000000, 99999999) | random }}-{{ range(10000000, 99999999) | random }}-{{ range(10000000, 99999999) | random }}-{{ range(1000, 9999) | random }}",
+      "TargetUserName": "{{ target_user_name | default('Administrators') }}",
+      "TargetDomainName": "Builtin",
+      "TargetSid": "S-1-5-32-544",
+      "SubjectUserSid": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}",
+      "SubjectUserName": "{{ user_name }}",
+      "SubjectDomainName": "{{ user_domain }}",
+      "SubjectLogonId": "0x{{ range(100000, 999999) | random | string }}",
+      "PrivilegeList": "-"
+    }
+  },
+  "log": { "level": "information" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

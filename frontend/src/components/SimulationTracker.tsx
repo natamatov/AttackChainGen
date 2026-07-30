@@ -7,6 +7,7 @@ interface SimulationProgress {
   progress_current: number
   progress_total: number
   status: string
+  error_message?: string
   logs?: string[]
 }
 
@@ -74,6 +75,11 @@ export function SimulationTracker({ runId }: { runId: number | null }) {
             <div className="text-[10px] text-muted-foreground mt-1 text-right">
               {progress.progress_current} / {progress.progress_total} steps
             </div>
+            {progress.status === 'failed' && progress.error_message && (
+              <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded text-xs text-red-500 font-mono break-words max-h-24 overflow-y-auto">
+                {progress.error_message}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

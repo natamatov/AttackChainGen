@@ -107,6 +107,7 @@ def _update_run_status(
         "progress_total": total,
         "progress_message": message,
         "events_sent": events_sent,
+        "error_message": error,
     })
 
 
@@ -167,7 +168,8 @@ def run_simulation(self: Task, run_id: int) -> dict:
         base_steps = pb.execution_order()
         steps = []
         for s in base_steps:
-            for _ in range(s.multiplier):
+            safe_multiplier = min(s.multiplier, 1000)
+            for _ in range(safe_multiplier):
                 steps.append(s)
                 
         total_steps = len(steps)

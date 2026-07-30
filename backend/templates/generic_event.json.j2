@@ -1,0 +1,41 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["intrusion_detection"],
+    "type": ["info"],
+    "provider": "AttackChainGen-Generic",
+    "dataset": "generic.event",
+    "module": "attackchaingen"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip | default('10.0.0.1') }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "{{ user_sid | default('S-1-5-18') }}"
+  },
+  "process": {
+    "pid": {{ process_pid | default(1234) }},
+    "name": "{{ process_name | default('unknown') }}",
+    "command_line": {{ process_command_line | default(process_name | default('')) | tojson }},
+    "executable": {{ process_path | default(process_name | default('')) | tojson }}
+  },
+  "message": "Generic event generated due to missing template",
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }},
+    "generic_fallback": true
+  }
+}

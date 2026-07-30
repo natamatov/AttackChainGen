@@ -53,7 +53,7 @@
       "pid": {{ parent_pid | default(4) }},
       "name": "{{ parent_name | default('System') }}",
       "entity_id": "{{ parent_guid | default('') }}",
-      "executable": {{ parent_path | default('C:\\Windows\\System32\\' + (parent_name | default('System'))) | tojson }}
+      "executable": {{ parent_path | default('C:\\Windows\\System32\\' ~ (parent_name | default('System'))) | tojson }}
     }
   },
   "winlog": {
@@ -85,7 +85,7 @@
       "Hashes": "SHA256={{ process_hash_sha256 | default('') }},MD5={{ process_hash_md5 | default('') }}",
       "ParentProcessGuid": "{{ parent_guid | default('') }}",
       "ParentProcessId": "{{ parent_pid | default(4) }}",
-      "ParentImage": {{ parent_path | default('C:\\Windows\\System32\\' + (parent_name | default('System'))) | tojson }},
+      "ParentImage": {{ parent_path | default('C:\\Windows\\System32\\' ~ (parent_name | default('System'))) | tojson }},
       "ParentCommandLine": {{ parent_command_line | default('-') | tojson }}
     }
   },

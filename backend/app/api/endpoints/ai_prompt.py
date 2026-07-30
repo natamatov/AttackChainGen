@@ -40,11 +40,13 @@ async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_db)):
 
 """
     for zone in env.zones:
-        prompt += f"Сетевой сегмент: {zone.name} (Диапазон IP: {zone.ip_range})\n"
+        z_type = f" (Тип: {zone.zone_type})" if zone.zone_type else ""
+        prompt += f"Сетевой сегмент: {zone.name}{z_type} (Диапазон IP: {zone.ip_range})\n"
         if zone.assets:
             for asset in zone.assets:
-                role_str = f" - {asset.role}" if asset.role else ""
-                prompt += f"- {asset.hostname} ({asset.ip_address}){role_str}\n"
+                role_str = f", Role: {asset.role}" if asset.role else ""
+                os_str = f", OS: {asset.os_name}" if asset.os_name else ""
+                prompt += f"- {asset.hostname} ({asset.ip_address}){role_str}{os_str}\n"
         else:
             prompt += "- (Нет заданных хостов. Ты можешь использовать любые IP-адреса из указанного диапазона этого сегмента)\n"
         prompt += "\n"
@@ -54,6 +56,7 @@ async def generate_prompt(env_id: int, db: AsyncSession = Depends(get_db)):
     prompt += """ЗАДАЧА:
 Напиши сценарий атаки, логически выстраивая шаги (Initial Access -> Recon -> Lateral Movement).
 В полях source_ip, host_name, destination_ip и других IP/именах используй СТРОГО данные из предоставленного выше списка!
+ВНИМАНИЕ: Учитывай указанную ОС (Windows, Linux, macOS) и тип оборудования (ПК, Сервер, Коммутатор) при выборе техник и шаблонов. Не применяй Windows-техники к Linux или коммутаторам!
 
 ОБЯЗАТЕЛЬНАЯ СТРУКТУРА YAML (соблюдай точно):
 name: "Название сценария"
@@ -61,6 +64,8 @@ description: "Описание"
 global_context:
   host.name: "HOSTNAME"     # Хост-жертва из списка выше
   host.domain: "{env.domain}"
+  host.os: "OS"             # Операционная система хоста
+  host.type: "TYPE"         # Тип оборудования/сегмента
   user.name: "username"     # Имя пользователя-жертвы
 steps:
   - id: "step_1_initial_access"
@@ -92,7 +97,16 @@ steps:
 3. Используй СТРОГО имена хостов и IP из списка выше — НЕ выдумывай!
 4. Используй СТРОГО имена шаблонов из списка выше — НЕ выдумывай!
 5. Раздел global_context ОБЯЗАТЕЛЕН — укажи там основной хост атаки.
+6. ВАЖНО: В путях Windows используй двойные слеши для экранирования: `process_path: "C:\\\\Windows\\\\System32\\\\malware.exe"`. НИКОГДА не используй символ `@` перед строками (это C#-синтаксис, а не YAML)!
+7. ВАЖНО: Если внутри строки есть двойные кавычки (например, в `command_line`), обязательно экранируй их: `\\"` или используй одинарные кавычки для всей строки `''`. Иначе парсер YAML выдаст ошибку!
+
+ОЧЕНЬ ВАЖНО (ЕСЛИ ТЫ ИИ-АГЕНТ С ИНСТРУМЕНТАМИ):
+Вместо вывода текста в чат, ты ДОЛЖЕН создать два реальных файла с помощью своих инструментов (например, write_to_file):
+1. `<имя_атаки>.yml` — сам YAML-плейбук.
+2. `<имя_атаки>_guide.md` — Руководство аналитика и Чек-лист расследования в формате Markdown.
+Сохраняй их в текущую директорию или в папку, которую попросит пользователь.
+
+Markdown-руководство должно включать KQL запросы для поиска описанных в сценарии событий в Elastic/Kibana, шаги по расследованию (Triage, Analysis, Containment) и чек-лист.
 """
 
     return {"prompt": prompt}
-

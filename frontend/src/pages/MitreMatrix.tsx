@@ -32,13 +32,6 @@ export default function MitreMatrix() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Helper to get playbooks covering a specific tactic
-  const getPlaybooksForTactic = (tacticName: string) => {
-    return playbooks.filter(pb => 
-      pb.mitre_tactics.some(t => t.toLowerCase().replace(/[^a-z0-9]/g, '') === tacticName.toLowerCase().replace(/[^a-z0-9]/g, ''))
-    )
-  }
-
   // Helper to get playbooks covering a specific technique
   const getPlaybooksForTechnique = (techniqueId: string) => {
     return playbooks.filter(pb => {
@@ -52,7 +45,28 @@ export default function MitreMatrix() {
   }
 
   const matrix = (mitreData as MitreTactic[]).map(tactic => {
-    const tacticPlaybooks = getPlaybooksForTactic(tactic.name)
+    // A tactic is covered if any of its techniques are covered by a playbook.
+    // So we collect all playbooks that cover any technique in this tactic.
+    const playbooksMap = new Map<number, Playbook>()
+    
+    tactic.techniques.forEach(tech => {
+      const techPlaybooks = getPlaybooksForTechnique(tech.id)
+      techPlaybooks.forEach(pb => {
+        playbooksMap.set(pb.id, pb)
+      })
+    })
+    
+    // Also include playbooks that explicitly specify this tactic in mitre_tactics
+    playbooks.forEach(pb => {
+      const hasTactic = pb.mitre_tactics.some(t => 
+        t.toLowerCase().replace(/[^a-z0-9]/g, '') === tactic.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+      )
+      if (hasTactic) {
+        playbooksMap.set(pb.id, pb)
+      }
+    })
+    
+    const tacticPlaybooks = Array.from(playbooksMap.values())
     
     // Create a deep copy of techniques
     const techniques = tactic.techniques.map(t => ({ ...t }))

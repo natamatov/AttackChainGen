@@ -21,7 +21,7 @@ from app.core.security import (
 )
 from app.db.base import get_db
 from app.db.models import User
-from app.schemas.user import UserOut
+from app.schemas.user import UserOut, UserCreate
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -70,6 +70,33 @@ async def login(
     refresh_token = create_refresh_token(subject=user.id)
 
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+async def register(
+    body: UserCreate,
+    db: AsyncSession = Depends(get_db),
+) -> UserOut:
+    """
+    Открытая регистрация нового пользователя (по умолчанию роль INSTRUCTOR).
+    """
+    from app.core.security import get_password_hash
+    existing = await db.execute(select(User).where(User.email == body.email))
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with email '{body.email}' already exists",
+        )
+    user = User(
+        email=body.email,
+        hashed_password=get_password_hash(body.password),
+        full_name=body.full_name,
+        role=body.role,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.post("/refresh", response_model=TokenResponse)

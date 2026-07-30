@@ -139,6 +139,27 @@ class PlaybookParser:
         if yaml_text.endswith("```"):
             yaml_text = yaml_text[:-3]
             
+        # Поддержка дословных строковых литералов C#-style: @"C:\Windows\System32"
+        # C# style raw strings @"C:\Path" -> "C:\\Path"
+        def raw_string_replace(match: re.Match) -> str:
+            inner = match.group(1)
+            # В C# raw string кавычки экранируются как ""
+            inner = inner.replace('""', '"')
+            escaped = inner.replace('\\', '\\\\').replace('"', '\\"')
+            return f'"{escaped}"'
+        yaml_text = re.sub(r'@"((?:[^"]|"")*)"', raw_string_replace, yaml_text)
+        
+        # Автоматическое экранирование одиночных слешей внутри двойных кавычек.
+        # Если пользователь написал "C:\temp" (что yaml распарсит как C:<tab>emp),
+        # мы автоматически превращаем это в "C:\\temp"
+        def escape_backslashes_in_quotes(match: re.Match) -> str:
+            inner = match.group(1)
+            # Заменяем только одиночные слеши на двойные (исключая экранированные кавычки \")
+            inner = re.sub(r'(?<!\\)\\(?![\\"])', r'\\\\', inner)
+            return f'"{inner}"'
+            
+        yaml_text = re.sub(r'"([^"\\]*(?:\\.[^"\\]*)*)"', escape_backslashes_in_quotes, yaml_text)
+            
         data = yaml.safe_load(yaml_text)
         if not isinstance(data, dict):
             raise ValueError("YAML must be a dictionary")

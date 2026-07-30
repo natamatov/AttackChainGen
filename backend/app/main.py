@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import auth, playbooks, simulations, stands, users, websockets
+from app.api import auth, playbooks, simulations, stands, users, websockets, assignments
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -61,8 +61,7 @@ async def global_exception_handler(request, exc):
 
 
 # Подключаем роутеры
-from app.api.endpoints import environments, ai_prompt
-from app.api import analyst_playbooks
+from app.api.endpoints import environments, ai_prompt, opencti, settings as settings_router
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -70,10 +69,11 @@ app.include_router(stands.router)
 app.include_router(playbooks.router)
 app.include_router(simulations.router)
 app.include_router(websockets.router)
+app.include_router(assignments.router, prefix="/api")
 app.include_router(environments.router, prefix="/api/environments", tags=["environments"])
 app.include_router(ai_prompt.router, prefix="/api/ai-prompt", tags=["ai_prompt"])
-app.include_router(analyst_playbooks.router)
-
+app.include_router(opencti.router, prefix="/api/opencti", tags=["opencti"])
+app.include_router(settings_router.router, prefix="/api/settings", tags=["settings"])
 
 
 @app.get("/api/health")

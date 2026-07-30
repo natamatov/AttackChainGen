@@ -1,0 +1,47 @@
+name: "Vector 3: Supply Chain to Ransomware Deployment"
+description: "Атака через скомпрометированного IT-подрядчика. Злоумышленник логинится на контроллер домена AD02 через легитимный RMM-софт, дампит хэши паролей и раскатывает вымогательское ПО на рабочую станцию PC1 через групповые политики."
+global_context:
+  host.name: "AD02"
+  host.domain: "corp.local.uz"
+  user.name: "msp_admin"
+steps:
+  - id: "v3_step1_msp_login"
+    template: "win_security_4624"
+    description: "Вход ИТ-подрядчика на контроллер домена в нерабочее время (Supply Chain компрометация)."
+    delay_from_prev: "0s"
+    fields:
+      host_name: "AD02"
+      host_ip: "192.168.100.2"
+      source_ip: "203.0.113.44"
+      user_name: "msp_admin"
+      user_domain: "corp.local.uz"
+      logon_type: 10
+      mitre_technique: "T1133"
+
+  - id: "v3_step2_lsass_dump"
+    template: "win_security_4688"
+    description: "Создание дампа процесса LSASS для извлечения учетных данных Domain Admin."
+    delay_from_prev: "5m"
+    depends_on: "v3_step1_msp_login"
+    fields:
+      host_name: "AD02"
+      host_ip: "192.168.100.2"
+      user_name: "msp_admin"
+      user_domain: "corp.local.uz"
+      process_name: "C:\\Temp\\procdump.exe"
+      parent_path: "C:\\Windows\\System32\\cmd.exe"
+      process_command_line: "procdump.exe -ma lsass.exe lsass.dmp"
+      mitre_technique: "T1003.001"
+
+  - id: "v3_step3_ransomware_deploy"
+    template: "sysmon_event_11"
+    description: "Создание вредоносного исполняемого файла (шифровальщика) на конечной станции PC1 через подменённую GPO."
+    delay_from_prev: "30m"
+    depends_on: "v3_step2_lsass_dump"
+    fields:
+      host_name: "PC1"
+      host_ip: "192.168.100.20"
+      user_name: "SYSTEM"
+      process_name: "C:\\Windows\\System32\\svchost.exe"
+      file_path: "C:\\Windows\\Temp\\locker.exe"
+      mitre_technique: "T1486"

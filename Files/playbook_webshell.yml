@@ -1,0 +1,56 @@
+name: "Web Server Exploitation & Web Shell"
+description: "Эксплуатация уязвимости на веб-сервере (mail01), заливка веб-шелла и выполнение команд."
+global_context:
+  host.name: "mail01"
+  host.domain: "{env.domain}"
+  user.name: "SYSTEM"
+
+steps:
+  - id: "step_1_webshell_creation"
+    template: "sysmon_event_11"
+    description: "Создание веб-шелла (shell.aspx) процессом IIS (w3wp.exe) в публичной директории."
+    delay_from_prev: "0s"
+    fields:
+      host_name: "mail01"
+      host_ip: "192.168.100.5"
+      user_name: "IIS APPPOOL\\DefaultAppPool"
+      file_name: "shell.aspx"
+      file_path: "C:\\inetpub\\wwwroot\\shell.aspx"
+      mitre_technique: "T1505.003"
+      mitre_tactic: "Persistence"
+
+  - id: "step_2_webshell_execution"
+    template: "win_security_4688"
+    description: "Выполнение команд ОС через веб-шелл (появление cmd.exe от w3wp.exe)."
+    delay_from_prev: "1m"
+    depends_on: "step_1_webshell_creation"
+    fields:
+      host_name: "mail01"
+      host_ip: "192.168.100.5"
+      user_name: "IIS APPPOOL\\DefaultAppPool"
+      process_name: "cmd.exe"
+      process_path: "C:\\Windows\\System32\\cmd.exe"
+      parent_name: "w3wp.exe"
+      parent_path: "C:\\Windows\\System32\\inetsrv\\w3wp.exe"
+      process_command_line: "cmd.exe /c whoami"
+      mitre_technique: "T1059.003"
+      mitre_tactic: "Execution"
+
+  - id: "step_3_reverse_shell_connection"
+    template: "sysmon_event_3"
+    description: "Установка Reverse Shell (сетевого соединения) к атакующему с веб-сервера."
+    delay_from_prev: "10s"
+    depends_on: "step_2_webshell_execution"
+    fields:
+      host_name: "mail01"
+      host_ip: "192.168.100.5"
+      user_name: "IIS APPPOOL\\DefaultAppPool"
+      process_name: "powershell.exe"
+      process_path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+      source_ip: "192.168.100.5"
+      source_port: 55431
+      destination_ip: "192.168.100.253"
+      destination_port: 4444
+      network_protocol: "tcp"
+      mitre_technique: "T1071.001"
+      mitre_tactic: "Command and Control"

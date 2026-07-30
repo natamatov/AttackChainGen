@@ -30,8 +30,8 @@
   "process": {
     "pid": {{ process_pid | default(range(1000, 9999) | random) }},
     "name": "{{ process_name | default('bash') }}",
-    "executable": "{{ process_path | default('/bin/bash') }}",
-    "command_line": "{{ process_command_line | default('/bin/bash') }}",
+    "executable": "{{ process_path | default(process_name | default('/bin/bash')) }}",
+    "command_line": "{{ process_command_line | default(process_name | default('/bin/bash')) }}",
     "parent": {
       "pid": {{ parent_pid | default(range(100, 999) | random) }}
     }
@@ -41,7 +41,7 @@
       "record_type": "EXECVE",
       "sequence": {{ range(10000, 99999) | random }},
       "a0": "{{ process_name | default('bash') }}",
-      "a1": "{{ process_command_line | default('') }}",
+      "a1": "{{ process_command_line | default(process_name | default('')) }}",
       "res": "success"
     }
   },

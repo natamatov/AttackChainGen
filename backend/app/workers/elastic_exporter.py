@@ -46,8 +46,12 @@ class ElasticExporter:
         index: str = "logs-attackchain-default",
         verify_ssl: bool = False,
     ) -> None:
+        import datetime
         self._index = index
-        
+        if self._index.endswith("*"):
+            today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y.%m.%d")
+            self._index = self._index[:-1] + today
+            
         client_kwargs = {
             "hosts": [elastic_url],
             "verify_certs": verify_ssl,

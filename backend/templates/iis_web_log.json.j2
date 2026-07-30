@@ -1,0 +1,63 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["web"],
+    "type": ["access"],
+    "dataset": "iis.access",
+    "module": "iis"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip | default('10.0.0.1') }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows Server 2019",
+      "version": "10.0.17763"
+    }
+  },
+  "source": {
+    "ip": "{{ source_ip | default('192.168.100.22') }}",
+    "port": {{ source_port | default(range(10000, 60000) | random) }}
+  },
+  "destination": {
+    "ip": "{{ host_ip | default('10.0.0.1') }}",
+    "port": {{ dest_port | default(80) }}
+  },
+  "http": {
+    "request": {
+      "method": "{{ http_method | default('GET') }}"
+    },
+    "response": {
+      "status_code": {{ http_status | default(200) }}
+    }
+  },
+  "url": {
+    "path": {{ url_path | default('/') | tojson }},
+    "query": {{ url_query | default('-') | tojson }}
+  },
+  "user_agent": {
+    "original": {{ user_agent | default('Mozilla/5.0 (Windows NT 10.0; Win64; x64)') | tojson }}
+  },
+  "iis": {
+    "access": {
+      "site_name": "{{ site_name | default('Default Web Site') }}",
+      "server_ip": "{{ host_ip | default('10.0.0.1') }}",
+      "user_name": "-",
+      "sub_status": {{ http_sub_status | default(0) }},
+      "win32_status": 0,
+      "time_taken": {{ time_taken | default(range(10, 500) | random) }}
+    }
+  },
+  "log": { "level": "info" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

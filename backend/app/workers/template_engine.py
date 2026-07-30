@@ -15,9 +15,29 @@ from typing import Any
 from jinja2 import (
     Environment,
     FileSystemLoader,
-    StrictUndefined,
+    Undefined,
     select_autoescape,
 )
+from jinja2.exceptions import TemplateNotFound
+
+class SafeUndefined(Undefined):
+    """Безопасный Undefined, который не вызывает исключений при операциях."""
+    def __str__(self):
+        return ""
+    def __repr__(self):
+        return ""
+    def __add__(self, other):
+        return other
+    def __radd__(self, other):
+        return other
+
+def safe_tojson(obj, **kwargs):
+    if isinstance(obj, Undefined):
+        return 'null'
+    if obj is None:
+        return 'null'
+    return json.dumps(obj, **kwargs)
+
 
 # Директория с шаблонами по умолчанию (относительно этого файла)
 DEFAULT_TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
@@ -39,23 +59,19 @@ class TemplateEngine:
         self._env = Environment(
             loader=FileSystemLoader(str(self._tpl_dir)),
             autoescape=select_autoescape(disabled_extensions=("j2",)),
-            undefined=StrictUndefined,
+            undefined=SafeUndefined,
             trim_blocks=True,
             lstrip_blocks=True,
         )
-        # Добавляем фильтры
-        self._env.filters["tojson"] = json.dumps
+        # Добавляем безопасный фильтр tojson
+        self._env.filters["tojson"] = safe_tojson
 
         # Sensible defaults for all common ECS/Windows fields to prevent StrictUndefined errors
         # when the AI forgets to provide them in the playbook fields.
         self.default_context = {
             "process_pid": 1234,
-            "process_name": "unknown_process.exe",
-            "process_path": "C:\\Windows\\System32\\unknown_process.exe",
-            "process_command_line": "unknown_process.exe",
+            "process_name": "unknown_process",
             "parent_pid": 4,
-            "parent_name": "System",
-            "parent_path": "C:\\Windows\\System32\\System",
             "user_name": "system",
             "user_domain": "WORKGROUP",
             "user_sid": "S-1-5-18",
@@ -71,7 +87,6 @@ class TemplateEngine:
             "mitre_technique": "T0000",
             "mitre_technique_name": "Unknown",
             "file_name": "unknown.txt",
-            "file_path": "C:\\unknown.txt",
             "file_size": 1024,
             "file_hash_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
             "network_protocol": "tcp",
@@ -137,6 +152,18 @@ class TemplateEngine:
         try:
             tpl = self._env.get_template(tpl_file)
             rendered = tpl.render(**safe_ctx)
+        except TemplateNotFound:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Template '{tpl_file}' not found. Falling back to generic_event.json.j2")
+            try:
+                tpl = self._env.get_template("generic_event.json.j2")
+                # Для generic_event передаем весь безопасный контекст
+                rendered = tpl.render(**safe_ctx)
+            except Exception as exc2:
+                raise TemplateRenderError(
+                    f"Fallback generic_event.json.j2 also failed: {exc2}"
+                ) from exc2
         except Exception as exc:
             raise TemplateRenderError(
                 f"Failed to render template '{tpl_file}': {exc}"

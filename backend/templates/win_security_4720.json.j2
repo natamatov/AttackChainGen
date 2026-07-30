@@ -1,0 +1,87 @@
+{
+  "@timestamp": "{{ '@timestamp' }}",
+  "ecs": { "version": "{{ ecs_version }}" },
+  "event": {
+    "kind": "event",
+    "category": ["iam"],
+    "type": ["user", "creation"],
+    "provider": "Microsoft-Windows-Security-Auditing",
+    "code": "4720",
+    "dataset": "windows.security",
+    "module": "windows",
+    "outcome": "success",
+    "action": "user-account-created"
+  },
+  "host": {
+    "name": "{{ host_name }}",
+    "hostname": "{{ host_name }}",
+    "domain": "{{ host_domain }}",
+    "ip": ["{{ host_ip | default('10.0.0.1') }}"],
+    "os": {
+      "type": "windows",
+      "platform": "windows",
+      "family": "windows",
+      "name": "Windows 10 Enterprise",
+      "version": "10.0.19045"
+    }
+  },
+  "user": {
+    "name": "{{ user_name }}",
+    "domain": "{{ user_domain }}",
+    "id": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}",
+    "target": {
+      "name": "{{ target_user_name | default('newuser') }}",
+      "domain": "{{ target_user_domain | default(user_domain) }}"
+    }
+  },
+  "agent": {
+    "id": "{{ agent_id }}",
+    "name": "{{ host_name }}",
+    "type": "winlogbeat",
+    "version": "{{ agent_version }}"
+  },
+  "winlog": {
+    "provider_name": "Microsoft-Windows-Security-Auditing",
+    "event_id": 4720,
+    "channel": "Security",
+    "computer_name": "{{ host_name }}.{{ host_domain }}",
+    "record_id": {{ event_id | default(range(100000, 999999) | random) }},
+    "keywords": ["Audit Success"],
+    "task": "User Account Management",
+    "opcode": "Info",
+    "event_data": {
+      "TargetUserName": "{{ target_user_name | default('newuser') }}",
+      "TargetDomainName": "{{ target_user_domain | default(user_domain) }}",
+      "TargetSid": "S-1-5-21-{{ range(10000000, 99999999) | random }}-{{ range(10000000, 99999999) | random }}-{{ range(10000000, 99999999) | random }}-{{ range(1000, 9999) | random }}",
+      "SubjectUserSid": "{{ user_sid | default('S-1-5-21-1234567890-1234567890-1234567890-1001') }}",
+      "SubjectUserName": "{{ user_name }}",
+      "SubjectDomainName": "{{ user_domain }}",
+      "SubjectLogonId": "0x{{ range(100000, 999999) | random | string }}",
+      "PrivilegeList": "-",
+      "SamAccountName": "{{ target_user_name | default('newuser') }}",
+      "DisplayName": "{{ target_user_name | default('newuser') }}",
+      "UserPrincipalName": "-",
+      "HomeDirectory": "-",
+      "HomePath": "-",
+      "ScriptPath": "-",
+      "ProfilePath": "-",
+      "UserWorkstations": "-",
+      "PasswordLastSet": "%%1794",
+      "AccountExpires": "%%1794",
+      "PrimaryGroupId": "513",
+      "AllowedToDelegateTo": "-",
+      "OldUacValue": "0x0",
+      "NewUacValue": "0x15",
+      "UserAccountControl": "%%2080\n%%2082\n%%2084",
+      "UserParameters": "-",
+      "SidHistory": "-",
+      "LogonHours": "%%1793"
+    }
+  },
+  "log": { "level": "information" },
+  "tags": ["attackchain", {% if is_noise | default(false) %}"noise"{% else %}"attack-simulation"{% endif %}],
+  "labels": {
+    "simulation": "attackchain",
+    "is_noise": {{ is_noise | default(false) | tojson }}
+  }
+}

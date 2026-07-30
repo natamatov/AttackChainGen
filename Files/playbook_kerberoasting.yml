@@ -1,0 +1,56 @@
+name: "Kerberoasting Attack"
+description: "Симуляция извлечения сервисных билетов (TGS) для последующего подбора паролей оффлайн."
+global_context:
+  host.name: "PC3"
+  host.domain: "{env.domain}"
+  user.name: "hacker_user"
+
+steps:
+  - id: "step_1_rubeus_execution"
+    template: "win_security_4688"
+    description: "Запуск Rubeus для запроса сервисных билетов с шифрованием RC4."
+    delay_from_prev: "0s"
+    fields:
+      host_name: "PC3"
+      host_ip: "192.168.100.22"
+      user_name: "hacker_user"
+      process_name: "Rubeus.exe"
+      process_path: "C:\\Users\\hacker_user\\Downloads\\Rubeus.exe"
+      parent_name: "cmd.exe"
+      parent_path: "C:\\Windows\\System32\\cmd.exe"
+      process_command_line: "Rubeus.exe kerberoast /outfile:hashes.txt"
+      mitre_technique: "T1558.003"
+      mitre_tactic: "Credential Access"
+
+  - id: "step_2_tgs_request_connection"
+    template: "sysmon_event_3"
+    description: "Массовые сетевые запросы к KDC (Port 88) для получения билетов."
+    delay_from_prev: "2s"
+    depends_on: "step_1_rubeus_execution"
+    fields:
+      host_name: "PC3"
+      host_ip: "192.168.100.22"
+      user_name: "hacker_user"
+      process_name: "Rubeus.exe"
+      process_path: "C:\\Users\\hacker_user\\Downloads\\Rubeus.exe"
+      source_ip: "192.168.100.22"
+      source_port: 50111
+      destination_ip: "192.168.100.2"
+      destination_port: 88
+      network_protocol: "tcp"
+      mitre_technique: "T1558.003"
+      mitre_tactic: "Credential Access"
+
+  - id: "step_3_file_creation_hashes"
+    template: "sysmon_event_11"
+    description: "Сохранение хешей TGS в текстовый файл для выгрузки."
+    delay_from_prev: "1s"
+    depends_on: "step_2_tgs_request_connection"
+    fields:
+      host_name: "PC3"
+      host_ip: "192.168.100.22"
+      user_name: "hacker_user"
+      file_name: "hashes.txt"
+      file_path: "C:\\Users\\hacker_user\\Downloads\\hashes.txt"
+      mitre_technique: "T1558.003"
+      mitre_tactic: "Credential Access"

@@ -38,6 +38,12 @@ from app.db.base import Base
 class UserRole(str, enum.Enum):
     ADMIN = "admin"
     INSTRUCTOR = "instructor"
+    STUDENT = "student"
+
+class AssignmentStatus(str, enum.Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 class SimulationStatus(str, enum.Enum):
@@ -58,6 +64,13 @@ class NoiseLevel(str, enum.Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
+
+class PlaybookStatus(str, enum.Enum):
+    DRAFT = "draft"
+    TESTING = "testing"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 # ─────────────────────────────────────────────────────────────────────── #
@@ -86,6 +99,7 @@ class User(Base):
     stands: Mapped[list["Stand"]] = relationship(back_populates="created_by_user")
     playbooks: Mapped[list["Playbook"]] = relationship(back_populates="created_by_user")
     simulation_runs: Mapped[list["SimulationRun"]] = relationship(back_populates="created_by_user")
+    assignments: Mapped[list["StudentAssignment"]] = relationship(back_populates="assigned_to_user", foreign_keys="[StudentAssignment.assigned_to]")
 
     def __repr__(self) -> str:
         return f"<User id={self.id} email={self.email} role={self.role}>"
@@ -134,7 +148,7 @@ class Stand(Base):
 # ─────────────────────────────────────────────────────────────────────── #
 
 class Playbook(Base):
-    """Сценарий атаки (YAML)."""
+    """Сценарий атаки (YAML) и руководство аналитика."""
 
     __tablename__ = "playbooks"
 
@@ -144,7 +158,13 @@ class Playbook(Base):
     mitre_tactics: Mapped[list | None] = mapped_column(JSON, default=list)
     mitre_techniques: Mapped[list | None] = mapped_column(JSON, default=list)
     yaml_content: Mapped[str] = mapped_column(Text, nullable=False)
+    analyst_guide: Mapped[str | None] = mapped_column(Text)
+    os_type: Mapped[str] = mapped_column(String(50), default="Windows", nullable=False)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[PlaybookStatus] = mapped_column(
+        Enum(PlaybookStatus), default=PlaybookStatus.APPROVED, nullable=False, index=True
+    )
+    stix_references: Mapped[dict | None] = mapped_column(JSON, default=dict)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -159,6 +179,30 @@ class Playbook(Base):
 
     def __repr__(self) -> str:
         return f"<Playbook id={self.id} name={self.name}>"
+
+
+# ─────────────────────────────────────────────────────────────────────── #
+# MitreMapping                                                             #
+# ─────────────────────────────────────────────────────────────────────── #
+
+class MitreMapping(Base):
+    """Связь техники MITRE и кастомного шаблона (Dynamic Mapping)."""
+
+    __tablename__ = "mitre_mappings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    mitre_id: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    template_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return f"<MitreMapping {self.mitre_id} -> {self.template_name}>"
 
 
 # ─────────────────────────────────────────────────────────────────────── #
@@ -216,9 +260,52 @@ class SimulationRun(Base):
     playbook: Mapped["Playbook | None"] = relationship(back_populates="simulation_runs")
     stand: Mapped["Stand | None"] = relationship(back_populates="simulation_runs")
     created_by_user: Mapped["User | None"] = relationship(back_populates="simulation_runs")
+    assignments: Mapped[list["StudentAssignment"]] = relationship(back_populates="simulation_run", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<SimulationRun id={self.id} status={self.status}>"
+
+
+# ─────────────────────────────────────────────────────────────────────── #
+# StudentAssignment                                                        #
+# ─────────────────────────────────────────────────────────────────────── #
+
+class StudentAssignment(Base):
+    """Назначенное задание (CTF) для студента."""
+
+    __tablename__ = "student_assignments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    simulation_id: Mapped[int] = mapped_column(
+        ForeignKey("simulation_runs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    assigned_to: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    assigned_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    legend: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[AssignmentStatus] = mapped_column(
+        Enum(AssignmentStatus), default=AssignmentStatus.PENDING, nullable=False, index=True
+    )
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    submitted_answers: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    simulation_run: Mapped["SimulationRun"] = relationship(back_populates="assignments")
+    assigned_to_user: Mapped["User"] = relationship(foreign_keys=[assigned_to], back_populates="assignments")
+    assigned_by_user: Mapped["User | None"] = relationship(foreign_keys=[assigned_by])
+
+    def __repr__(self) -> str:
+        return f"<StudentAssignment id={self.id} status={self.status}>"
 
 
 # ─────────────────────────────────────────────────────────────────────── #
@@ -261,6 +348,7 @@ class NetworkZone(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     ip_range: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    zone_type: Mapped[str | None] = mapped_column(String(50))
 
     # Relationships
     environment: Mapped["FictionalEnvironment"] = relationship(back_populates="zones")
@@ -283,37 +371,21 @@ class Asset(Base):
     hostname: Mapped[str] = mapped_column(String(255), nullable=False)
     ip_address: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str | None] = mapped_column(String(255))
+    device_type: Mapped[str | None] = mapped_column(String(50))
+    os_name: Mapped[str | None] = mapped_column(String(100))
 
     # Relationships
     zone: Mapped["NetworkZone"] = relationship(back_populates="assets")
 
 
-# ─────────────────────────────────────────────────────────────────────── #
-# Analyst Playbook                                                         #
-# ─────────────────────────────────────────────────────────────────────── #
-
-class AnalystPlaybook(Base):
-    """Аналитический плейбук — руководство для SOC-аналитика по расследованию атаки."""
-    __tablename__ = "analyst_playbooks"
+class GlobalSettings(Base):
+    """Глобальные настройки системы (например, интеграции с OpenCTI)."""
+    __tablename__ = "global_settings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    key: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    value: Mapped[str | None] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
-
-    # Привязка к сценарию атаки (опционально)
-    playbook_id: Mapped[int | None] = mapped_column(
-        ForeignKey("playbooks.id", ondelete="SET NULL"), nullable=True
-    )
-
-    # Руководство аналитика (Markdown): что искать, KQL-запросы, шаги расследования
-    analyst_guide: Mapped[str | None] = mapped_column(Text)
-
-    # Чеклист расследования (Markdown): что аналитик должен найти и сдать
-    investigation_checklist: Mapped[str | None] = mapped_column(Text)
-
-    created_by: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -321,10 +393,6 @@ class AnalystPlaybook(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    # Relationships
-    playbook: Mapped["Playbook | None"] = relationship(foreign_keys=[playbook_id])
-    created_by_user: Mapped["User | None"] = relationship(foreign_keys=[created_by])
-
     def __repr__(self) -> str:
-        return f"<AnalystPlaybook id={self.id} name={self.name}>"
+        return f"<GlobalSettings key={self.key}>"
 

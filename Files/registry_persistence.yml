@@ -1,0 +1,41 @@
+name: "Registry Persistence & Account Backdoor"
+description: "Атакующий создает скрытую локальную учетную запись и прописывает вредоносный бинарник в ключ реестра Run на файловом сервере FS01 для долгосрочного закрепления."
+global_context:
+  host.name: "FS01"
+  host.domain: "corp.local.uz"
+  host.ip: "192.168.100.1"
+
+steps:
+  - id: "step_1_create_user"
+    template: "win_security_4720"
+    description: "Создание новой локальной учетной записи BackupAdmin."
+    mitre_tactic: "Persistence"
+    mitre_technique: "T1098"
+    delay_from_prev: "0s"
+    fields:
+      user_name: "BackupAdmin"
+      subject_user_name: "administrator"
+
+  - id: "step_2_add_to_group"
+    template: "win_security_4732"
+    description: "Добавление пользователя BackupAdmin в группу локальных администраторов."
+    mitre_tactic: "Persistence"
+    mitre_technique: "T1098"
+    delay_from_prev: "2s"
+    depends_on: "step_1_create_user"
+    fields:
+      group_name: "Administrators"
+      member_name: "BackupAdmin"
+      subject_user_name: "administrator"
+
+  - id: "step_3_registry_run"
+    template: "win_sysmon_13_registry_value_set"
+    description: "Добавление исполняемого файла в ветку реестра Run для автозагрузки."
+    mitre_tactic: "Persistence"
+    mitre_technique: "T1547.001"
+    delay_from_prev: "5s"
+    depends_on: "step_2_add_to_group"
+    fields:
+      process_name: "cmd.exe"
+      target_object: "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\WinUpdater"
+      details: "C:\Windows\Temp\updater.exe"

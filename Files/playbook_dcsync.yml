@@ -1,0 +1,58 @@
+name: "DCSync Attack"
+description: "Симуляция извлечения хешей паролей из Active Directory методом DCSync."
+global_context:
+  host.name: "PC-DIRECTOR"
+  host.domain: "{env.domain}"
+  user.name: "administrator"
+
+steps:
+  - id: "step_1_mimikatz_execution"
+    template: "win_security_4688"
+    description: "Запуск Mimikatz для выполнения атаки DCSync."
+    delay_from_prev: "0s"
+    fields:
+      host_name: "PC-DIRECTOR"
+      host_ip: "192.168.100.24"
+      user_name: "administrator"
+      process_name: "mimikatz.exe"
+      process_path: "C:\\Users\\administrator\\Desktop\\mimikatz.exe"
+      parent_name: "cmd.exe"
+      parent_path: "C:\\Windows\\System32\\cmd.exe"
+      process_command_line: "\"mimikatz.exe\" \"lsadump::dcsync /domain:corp.local.uz /all\" \"exit\""
+      mitre_technique: "T1003.006"
+      mitre_tactic: "Credential Access"
+
+  - id: "step_2_rpc_connection_to_dc"
+    template: "sysmon_event_3"
+    description: "Сетевое соединение по RPC к контроллеру домена (DCSync/DRSUAPI)."
+    delay_from_prev: "2s"
+    depends_on: "step_1_mimikatz_execution"
+    fields:
+      host_name: "PC-DIRECTOR"
+      host_ip: "192.168.100.24"
+      user_name: "administrator"
+      process_name: "mimikatz.exe"
+      process_path: "C:\\Users\\administrator\\Desktop\\mimikatz.exe"
+      source_ip: "192.168.100.24"
+      source_port: 49301
+      destination_ip: "192.168.100.2"
+      destination_port: 135
+      network_protocol: "tcp"
+      mitre_technique: "T1003.006"
+      mitre_tactic: "Credential Access"
+
+  - id: "step_3_lateral_movement_pass_the_hash"
+    template: "win_security_4624"
+    description: "Использование извлеченных хешей для входа на сервер."
+    delay_from_prev: "10m"
+    depends_on: "step_2_rpc_connection_to_dc"
+    fields:
+      host_name: "FS01"
+      host_ip: "192.168.100.1"
+      user_name: "administrator"
+      source_ip: "192.168.100.24"
+      destination_ip: "192.168.100.1"
+      logon_type: 3
+      logon_process_name: "NtLmSsp"
+      mitre_technique: "T1550.002"
+      mitre_tactic: "Lateral Movement"

@@ -50,13 +50,22 @@ async def create_playbook(
             detail=f"Invalid playbook YAML: {exc}",
         )
 
+    # Auto-detect os_type if not provided
+    os_type = body.os_type
+    if not os_type:
+        os_type = "Linux" if "linux_" in body.yaml_content.lower() else "Windows"
+
     playbook = Playbook(
         name=body.name or pb.name,
         description=body.description or pb.description,
         mitre_tactics=body.mitre_tactics or pb.mitre_tactics,
         mitre_techniques=body.mitre_techniques or pb.mitre_techniques,
         yaml_content=body.yaml_content,
+        analyst_guide=body.analyst_guide,
+        os_type=os_type,
         is_public=body.is_public,
+        status=body.status,
+        stix_references=body.stix_references,
         created_by=current_user.id,
     )
     db.add(playbook)
@@ -115,11 +124,49 @@ async def update_playbook(
                 detail=f"Invalid YAML: {exc}",
             )
 
-    for field, value in body.model_dump(exclude_none=True).items():
+    update_data = body.model_dump(exclude_none=True)
+    for field, value in update_data.items():
         setattr(pb, field, value)
 
+    db.add(pb)
     await db.flush()
     await db.refresh(pb)
+    return pb
+
+
+@router.post("/{playbook_id}/approve", response_model=PlaybookOut)
+async def approve_playbook(
+    playbook_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Playbook:
+    """Одобряет гипотезу (DRAFT) в рабочий Playbook (APPROVED). Требует хотя бы одного успешного прогона."""
+    result = await db.execute(select(Playbook).where(Playbook.id == playbook_id))
+    pb = result.scalar_one_or_none()
+    if not pb:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+        
+    from app.db.models import SimulationRun, SimulationStatus, PlaybookStatus
+    
+    # Check if there's at least one successful simulation
+    sim_result = await db.execute(
+        select(SimulationRun)
+        .where(SimulationRun.playbook_id == playbook_id)
+        .where(SimulationRun.status == SimulationStatus.COMPLETED)
+    )
+    successful_sims = sim_result.scalars().all()
+    
+    if not successful_sims:
+        raise HTTPException(
+            status_code=400, 
+            detail="Невозможно одобрить гипотезу. Требуется успешный прогон симуляции."
+        )
+        
+    pb.status = PlaybookStatus.APPROVED
+    db.add(pb)
+    await db.commit()
+    await db.refresh(pb)
+    
     return pb
 
 

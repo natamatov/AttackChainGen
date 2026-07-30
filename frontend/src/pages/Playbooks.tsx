@@ -12,6 +12,8 @@ interface PlaybookSummary {
   description: string
   mitre_tactics: string[]
   mitre_techniques: string[]
+  os_type: string
+  status: string
   created_at: string
 }
 
@@ -20,12 +22,31 @@ export default function Playbooks() {
   const [loading, setLoading] = useState(true)
   const [showImport, setShowImport] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  
+  // Import form state
   const [newYamlName, setNewYamlName] = useState('')
   const [yamlContent, setYamlContent] = useState('')
+  const [mdContent, setMdContent] = useState('')
   const [defaultTemplate, setDefaultTemplate] = useState('')
+  const [osType, setOsType] = useState('Windows')
+  const [osFilter, setOsFilter] = useState<'All' | 'Windows' | 'Linux' | 'Other'>('All')
 
   useEffect(() => {
     fetchPlaybooks()
+    
+    // Check if we came from Threat Intel page with a generated playbook
+    const draftYaml = localStorage.getItem('opencti_draft_yaml')
+    const draftGuide = localStorage.getItem('opencti_draft_guide')
+    const draftName = localStorage.getItem('opencti_draft_name')
+    if (draftYaml) {
+      setNewYamlName(draftName || 'OpenCTI Playbook')
+      setYamlContent(draftYaml)
+      setMdContent(draftGuide || '')
+      setShowImport(true)
+      localStorage.removeItem('opencti_draft_yaml')
+      localStorage.removeItem('opencti_draft_guide')
+      localStorage.removeItem('opencti_draft_name')
+    }
   }, [])
 
   const handleImportYaml = async () => {
@@ -37,25 +58,63 @@ export default function Playbooks() {
       if (editingId) {
         await api.put(`/playbooks/${editingId}`, {
           name: newYamlName,
-          yaml_content: yamlContent
+          yaml_content: yamlContent,
+          analyst_guide: mdContent,
+          os_type: osType
         })
       } else {
         await api.post('/playbooks/', {
           name: newYamlName,
           yaml_content: yamlContent,
+          analyst_guide: mdContent,
+          os_type: osType,
           mitre_tactics: [],
           mitre_techniques: []
         })
       }
+
       setShowImport(false)
       setEditingId(null)
       setNewYamlName('')
       setYamlContent('')
+      setMdContent('')
+      setOsType('Windows')
       fetchPlaybooks()
     } catch (e: any) {
       console.error(e)
       const detail = e.response?.data?.detail || "Failed to save YAML playbook"
       alert(detail)
+    }
+  }
+
+  const handleYamlFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const content = ev.target?.result as string;
+        setYamlContent(content)
+        if (!newYamlName) {
+            const nameMatch = content.match(/name:\s*["']?([^"'\n]+)["']?/);
+            if (nameMatch && nameMatch[1]) {
+                setNewYamlName(nameMatch[1].trim());
+            } else {
+                setNewYamlName(file.name.replace(/\.[^/.]+$/, ""))
+            }
+        }
+      }
+      reader.readAsText(file)
+    }
+  }
+
+  const handleMdFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setMdContent(ev.target?.result as string)
+      }
+      reader.readAsText(file)
     }
   }
 
@@ -65,6 +124,8 @@ export default function Playbooks() {
       const pb = res.data
       setNewYamlName(pb.name)
       setYamlContent(pb.yaml_content || '')
+      setMdContent(pb.analyst_guide || '')
+      setOsType(pb.os_type || 'Windows')
       setEditingId(pb.id)
       setShowImport(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -75,13 +136,23 @@ export default function Playbooks() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this playbook?")) return
+    if (!confirm('Are you sure you want to delete this playbook?')) return
     try {
       await api.delete(`/playbooks/${id}`)
       fetchPlaybooks()
-    } catch (e) {
-      console.error(e)
-      alert("Failed to delete playbook")
+    } catch (error) {
+      console.error('Failed to delete playbook:', error)
+    }
+  }
+
+  const handleApprove = async (id: number) => {
+    try {
+      await api.post(`/playbooks/${id}/approve`)
+      alert('Hypothesis approved successfully!')
+      fetchPlaybooks()
+    } catch (error: any) {
+      console.error('Failed to approve playbook:', error)
+      alert(error.response?.data?.detail || 'Failed to approve playbook. Make sure it has at least one successful simulation run.')
     }
   }
 
@@ -108,6 +179,8 @@ export default function Playbooks() {
             setEditingId(null)
             setNewYamlName('')
             setYamlContent('')
+            setMdContent('')
+            setOsType('Windows')
             setShowImport(!showImport)
           }} variant="default">
             {showImport && !editingId ? 'Cancel' : <><Plus className="mr-2 h-4 w-4" /> Create / Import YAML</>}
@@ -116,6 +189,13 @@ export default function Playbooks() {
             Visual Builder
           </Link>
         </div>
+      </div>
+      
+      <div className="flex space-x-2 border-b pb-4">
+        <Button variant={osFilter === 'All' ? 'default' : 'outline'} onClick={() => setOsFilter('All')} size="sm">All</Button>
+        <Button variant={osFilter === 'Windows' ? 'default' : 'outline'} onClick={() => setOsFilter('Windows')} size="sm">Windows</Button>
+        <Button variant={osFilter === 'Linux' ? 'default' : 'outline'} onClick={() => setOsFilter('Linux')} size="sm">Linux</Button>
+        <Button variant={osFilter === 'Other' ? 'default' : 'outline'} onClick={() => setOsFilter('Other')} size="sm">Other</Button>
       </div>
 
       {showImport && (
@@ -128,6 +208,18 @@ export default function Playbooks() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Name</label>
               <Input value={newYamlName} onChange={e => setNewYamlName(e.target.value)} placeholder="e.g. My Custom Playbook" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">OS Type</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={osType}
+                onChange={e => setOsType(e.target.value)}
+              >
+                <option value="Windows">Windows</option>
+                <option value="Linux">Linux</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Default Template Override (Optional)</label>
@@ -149,6 +241,9 @@ export default function Playbooks() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">YAML Content</label>
+              <div className="flex gap-2 pb-2">
+                <Input type="file" accept=".yml,.yaml" onChange={handleYamlFileChange} />
+              </div>
               <textarea 
                 className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
                 value={yamlContent}
@@ -156,8 +251,34 @@ export default function Playbooks() {
                 placeholder="name: My Custom Playbook&#10;steps:&#10;  ..."
               />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Analyst Guide (Markdown) Content</label>
+              <div className="flex gap-2 pb-2">
+                <Input type="file" accept=".md" onChange={handleMdFileChange} />
+              </div>
+              <textarea 
+                className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                value={mdContent}
+                onChange={e => setMdContent(e.target.value)}
+                placeholder="# Analyst Guide&#10;## 1. Triage&#10;..."
+              />
+            </div>
+            
             <div className="flex space-x-2">
               <Button onClick={handleImportYaml}>{editingId ? 'Save Changes' : 'Create Playbook'}</Button>
+              {mdContent && (
+                <Button variant="secondary" onClick={() => {
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write('<html><head><title>Print Guide</title><style>body { font-family: sans-serif; line-height: 1.6; padding: 2rem; max-width: 800px; margin: auto; } pre { background: #f4f4f4; padding: 1rem; border-radius: 4px; white-space: pre-wrap; font-family: inherit; }</style></head><body>');
+                    printWindow.document.write('<pre>' + mdContent.replace(/</g, "&lt;").replace(/>/g, "&gt;") + '</pre>');
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => printWindow.print(), 250);
+                  }
+                }}>Print Guide</Button>
+              )}
               {editingId && (
                 <Button variant="outline" onClick={() => { setShowImport(false); setEditingId(null) }}>Cancel</Button>
               )}
@@ -172,18 +293,32 @@ export default function Playbooks() {
         ) : playbooks.length === 0 ? (
           <div className="text-sm text-muted-foreground">No playbooks found. Create one!</div>
         ) : (
-          playbooks.map((pb) => (
+          playbooks
+            .filter(pb => osFilter === 'All' || pb.os_type === osFilter)
+            .map((pb) => (
             <Card key={pb.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex-1">
-                  <CardTitle>{pb.name}</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    {pb.name}
+                    {pb.os_type === 'Windows' && <span className="text-[10px] uppercase bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">Windows</span>}
+                    {pb.os_type === 'Linux' && <span className="text-[10px] uppercase bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">Linux</span>}
+                    {pb.os_type === 'Other' && <span className="text-[10px] uppercase bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full font-bold">Other</span>}
+                    {pb.status === 'draft' && <span className="text-[10px] uppercase bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-bold">Draft / Hypothesis</span>}
+                    {pb.status === 'approved' && <span className="text-[10px] uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold">Approved</span>}
+                  </CardTitle>
                   <CardDescription className="line-clamp-2 mt-1">{pb.description || 'No description provided.'}</CardDescription>
                 </div>
                 <div className="flex space-x-2 ml-4">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(pb.id)}>
                     <Edit2 className="h-4 w-4 text-muted-foreground hover:text-blue-500" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(pb.id)}>
+                  {pb.status === 'draft' && (
+                    <Button variant="outline" size="sm" className="h-8 text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100" onClick={() => handleApprove(pb.id)}>
+                      Approve
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pb.id)}>
                     <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-500" />
                   </Button>
                 </div>

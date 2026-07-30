@@ -156,11 +156,15 @@ async def create_asset(
                     
             current_ip = start_ip
             assigned_ip = None
+            iterations = 0
             while current_ip <= end_ip:
+                if iterations > 10000:
+                    raise HTTPException(status_code=400, detail="IP range too large to scan for free IP")
                 if current_ip not in existing_ips:
                     assigned_ip = str(current_ip)
                     break
                 current_ip = ipaddress.IPv4Address(int(current_ip) + 1)
+                iterations += 1
                 
             if not assigned_ip:
                 raise HTTPException(status_code=400, detail="No available IP addresses in the given range")
@@ -183,3 +187,22 @@ async def delete_asset(asset_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Asset not found")
     await db.delete(asset)
     await db.commit()
+
+@router.put("/assets/{asset_id}", response_model=AssetOut)
+async def update_asset(
+    asset_id: int,
+    asset_in: AssetUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    asset = await db.get(Asset, asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+        
+    update_data = asset_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(asset, field, value)
+        
+    db.add(asset)
+    await db.commit()
+    await db.refresh(asset)
+    return asset

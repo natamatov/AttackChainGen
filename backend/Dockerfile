@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Системные зависимости
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc curl \
+    libpq-dev gcc curl libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Python зависимости
