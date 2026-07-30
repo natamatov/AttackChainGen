@@ -62,7 +62,7 @@ async def global_exception_handler(request, exc):
 
 
 # Подключаем роутеры
-from app.api.endpoints import environments, ai_prompt, opencti, settings as settings_router
+from app.api.endpoints import environments, ai_prompt, opencti, settings as settings_router, progress
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -75,7 +75,7 @@ app.include_router(environments.router, prefix="/api/environments", tags=["envir
 app.include_router(ai_prompt.router, prefix="/api/ai-prompt", tags=["ai_prompt"])
 app.include_router(opencti.router, prefix="/api/opencti", tags=["opencti"])
 app.include_router(settings_router.router, prefix="/api/settings", tags=["settings"])
-
+app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 
 @app.get("/api/health")
 async def health_check():

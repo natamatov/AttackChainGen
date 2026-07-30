@@ -101,8 +101,10 @@ export default function Users() {
                     <td className="px-6 py-4 font-medium">{user.email}</td>
                     <td className="px-6 py-4">{user.full_name || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        user.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                      <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${
+                        user.role === 'admin' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 
+                        user.role === 'student' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                        'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                       }`}>
                         {user.role}
                       </span>
@@ -168,6 +170,7 @@ export default function Users() {
                     onChange={e => setRole(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    <option value="student">Student</option>
                     <option value="instructor">Instructor</option>
                     <option value="admin">Admin</option>
                   </select>
