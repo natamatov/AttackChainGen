@@ -10,10 +10,10 @@ async def update_db():
     
     async with engine.begin() as conn:
         try:
-            print("Adding 'student' to userrole enum...")
-            await conn.execute(text("ALTER TYPE userrole ADD VALUE 'student';"))
+            print("Adding 'STUDENT' to userrole enum...")
+            await conn.execute(text("ALTER TYPE userrole ADD VALUE 'STUDENT';"))
         except Exception as e:
-            print(f"Role 'student' might already exist: {e}")
+            print(f"Role 'STUDENT' might already exist: {e}")
             
     async with engine.begin() as conn:
         try:
