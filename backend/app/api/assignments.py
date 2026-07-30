@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from typing import List
 
-from app.db.base import get_session
+from app.db.base import get_db
 from app.db.models import User, StudentAssignment, SimulationRun, AssignmentStatus, UserRole
 from app.api.deps import get_current_user
 from app.schemas.assignment import AssignmentCreate, AssignmentResponse, AssignmentSubmit
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/assignments", tags=["Assignments"])
 
 @router.get("/", response_model=List[AssignmentResponse])
 async def get_assignments(
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     if current_user.role == UserRole.STUDENT:
@@ -29,7 +29,7 @@ async def get_assignments(
 @router.post("/", response_model=AssignmentResponse)
 async def create_assignment(
     assignment: AssignmentCreate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     if current_user.role == UserRole.STUDENT:
@@ -58,7 +58,7 @@ async def create_assignment(
 async def submit_assignment(
     assignment_id: int,
     submission: AssignmentSubmit,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     stmt = select(StudentAssignment).options(selectinload(StudentAssignment.simulation_run)).where(StudentAssignment.id == assignment_id)
