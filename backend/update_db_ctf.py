@@ -7,20 +7,22 @@ settings = get_settings()
 
 async def update_db():
     engine = create_async_engine(str(settings.database_url))
+    
     async with engine.begin() as conn:
         try:
             print("Adding 'student' to userrole enum...")
-            # This might fail if it already exists, so we ignore errors
             await conn.execute(text("ALTER TYPE userrole ADD VALUE 'student';"))
         except Exception as e:
             print(f"Role 'student' might already exist: {e}")
             
+    async with engine.begin() as conn:
         try:
             print("Adding AssignmentStatus enum...")
             await conn.execute(text("CREATE TYPE assignmentstatus AS ENUM ('PENDING', 'COMPLETED', 'FAILED');"))
         except Exception as e:
             print(f"Enum might already exist: {e}")
             
+    async with engine.begin() as conn:
         try:
             print("Creating student_assignments table...")
             await conn.execute(text('''
