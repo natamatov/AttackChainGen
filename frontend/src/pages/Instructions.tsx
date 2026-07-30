@@ -144,7 +144,7 @@ export default function Instructions() {
             <Shield className="h-10 w-10 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">AttackChainGen</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">MARS</h1>
             <p className="text-muted-foreground text-base leading-relaxed max-w-2xl">
               Платформа для имитации кибератак и обучения аналитиков SOC. Система генерирует реалистичные синтетические
               логи по сценариям атак (Kill Chain) и отправляет их в Elasticsearch — аналитики расследуют инциденты,

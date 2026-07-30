@@ -51,8 +51,8 @@ export default function Login() {
     <div className="flex h-screen w-screen items-center justify-center bg-muted/40">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">AttackChainGen</CardTitle>
-          <CardDescription>Enter your email below to login to your account.</CardDescription>
+          <CardTitle className="text-2xl">MARS</CardTitle>
+          <CardDescription>Purple Teaming платформа для непрерывной тренировки аналитиков SOC.</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">

@@ -27,15 +27,16 @@ logging.basicConfig(
 async def lifespan(app: FastAPI):
     # Startup
     logging.info("AttackChainGen API Starting up...")
+    logging.info("MARS API Starting up...")
     yield
     # Shutdown
-    logging.info("AttackChainGen API Shutting down...")
+    logging.info("MARS API Shutting down...")
 
 
 app = FastAPI(
-    title=settings.app_name,
+    title="MARS API",
+    description="MARS: Purple Teaming Платформа для непрерывной тренировки аналитиков SOC",
     version="1.0.0",
-    lifespan=lifespan,
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
 )

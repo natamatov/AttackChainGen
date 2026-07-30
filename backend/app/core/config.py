@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     )
 
     # Application
-    app_name: str = "AttackChainGen"
+    app_name: str = "MARS"
     app_env: str = "development"
     secret_key: str = "change-me-to-a-long-random-secret-key-32chars"
     access_token_expire_minutes: int = 60
